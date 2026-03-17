@@ -1,0 +1,47 @@
+using UnityEngine;
+
+public class GameRoot : MonoBehaviour
+{
+    public static GameRoot Instance;
+
+    private UIManager UIManager;
+    public UIManager UIManager_Root { get => UIManager; }
+
+    private SceneControl SceneControl;
+    public SceneControl SceneControl_Root { get => SceneControl; }
+
+    public static GameRoot GetInstance()
+    {
+        if (Instance == null)
+        {
+            Debug.LogWarning("Game Root实例化失败!");
+            return Instance;
+        }
+        return Instance;
+    }
+
+    private void Awake()
+    {
+        // 确保GameRoot在场景中是唯一的实例，如果已经存在则销毁当前对象，否则将当前对象设置为实例
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
+        UIManager = new UIManager();
+        SceneControl = new SceneControl();
+    }
+
+    private void Start()
+    {
+        // 使GameRoot在场景切换时不会被销毁，保持其持久性,并且在游戏开始时找到当前场景中的Canvas和加载初始场景和UI
+        DontDestroyOnLoad(this);
+        UIManager_Root.CanvasObj = UIMethod.GetInstance().FindCanvas();
+        #region StartScene加载
+        UIManager_Root.PushPanel(new StartPanel());
+        #endregion
+    }
+}

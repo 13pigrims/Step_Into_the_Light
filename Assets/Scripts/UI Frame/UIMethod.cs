@@ -13,12 +13,8 @@ public class UIMethod
         if (Instance == null)
         {
             Instance = new UIMethod();
-            return Instance;
         }
-        else
-        {
-            return Instance;
-        }
+        return Instance;
     }
     /// <summary>
     /// 寻找场景中的Canvas对象（注：可能会遇到多个Canvas情况，需根据优先级进行判断，此处代码待优化）
@@ -27,10 +23,9 @@ public class UIMethod
     public GameObject FindCanvas()
     {
         GameObject canvas_obj = GameObject.FindAnyObjectByType<Canvas>().gameObject;
-        if (canvas_obj != null)
+        if (canvas_obj == null)
         {
-            Debug.LogError("未在场景中找到Canvas物体");
-           return canvas_obj;
+           Debug.LogError("未在场景中找到Canvas物体");
         }
         return canvas_obj;
          
@@ -44,14 +39,14 @@ public class UIMethod
     public GameObject FindObjectInChild(GameObject parent_Panel, string child_name)
     {
         Transform[] transforms = parent_Panel.GetComponentsInChildren<Transform>();
-        foreach (var t in transforms)
+        foreach (Transform t in transforms)
         {
-            if (t.name == child_name)
+            if (t.gameObject.name == child_name)
             {
                 return t.gameObject;
             }
         }
-        Debug.LogError("未在Panel中找到子物体");
+        Debug.LogWarning("未在Panel中找到子物体");
         return null;
     }
     /// <summary>
@@ -67,7 +62,7 @@ public class UIMethod
         {
             return Get_Obj.GetComponent<T>();
         }
-        Debug.LogError("未在目标对象上找到组件");
+        Debug.LogWarning("未在目标对象上找到组件");
         return null;
     }
     /// <summary>
@@ -90,7 +85,7 @@ public class UIMethod
                 }
             }
         }
-        Debug.LogError("未在Panel中找到子物体");
+        Debug.LogWarning("未在Panel中找到子物体");
         return null;
     }
 

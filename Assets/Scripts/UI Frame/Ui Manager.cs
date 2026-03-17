@@ -25,9 +25,14 @@ public class UIManager
             return Instance;
         }
     }
+    /// <summary>
+    /// 实例化UIManager对象，初始化UI对象字典和UI栈
+    /// </summary>
     public UIManager()
     {
         Instance = this;
+        stack_ui = new Stack<BasePanel>();
+        dict_uiObject = new Dictionary<string, GameObject>();
     }
     /// <summary>
     /// Panel入栈方法
@@ -72,12 +77,12 @@ public class UIManager
             return ui_obj;
         }
         if (CanvasObj == null)
-        { 
-           Debug.Log("CanvasObj is null, please assign it in the inspector.");
-           return null;
+        {
+            // 获取当前场景中的Canvas对象，赋值给CanvasObj变量
+            CanvasObj = UIMethod.GetInstance().FindCanvas();
         }
         // 字典中没有对应的UI物体，找到本地UI物体，实例化一个新的对象并返回
-        ui_obj = GameObject.Instantiate(Resources.Load<GameObject>(uIType.Path));
+        ui_obj = GameObject.Instantiate<GameObject>(Resources.Load<GameObject>(uIType.Path), CanvasObj.transform);
         return ui_obj;
     }
     /// <summary>
