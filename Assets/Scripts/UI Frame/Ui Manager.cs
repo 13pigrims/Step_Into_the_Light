@@ -50,9 +50,11 @@ public class UIManager
         GameObject ui_obj = GetSingleObject(basePanel.uiType);
         dict_uiObject.Add(basePanel.uiType.Name, ui_obj);
         basePanel.activeObj = ui_obj;
+        Debug.Log("当前入栈的Panel对应的UI物体名称为：" + ui_obj.name);
         // 栈内没有元素则直接入栈，否则比较当前栈顶元素与即将入栈的元素是否相同，不相同则禁用下层Panel后入栈
         if (stack_ui.Count == 0)
         {
+            Debug.Log("UI栈内没有元素，直接入栈");
             stack_ui.Push(basePanel);
         }
         else
@@ -63,6 +65,8 @@ public class UIManager
                 stack_ui.Push(basePanel);
             }
         }
+
+        basePanel.OnStart();
     }
     /// <summary>
     /// 获取当前Panel对应的UI物体，如果不存在则实例化一个新的对象并返回

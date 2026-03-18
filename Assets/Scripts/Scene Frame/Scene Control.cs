@@ -24,6 +24,14 @@ public class SceneControl
         }
     }
     /// <summary>
+    /// 实例化SceneControl对象，初始化场景字典
+    /// </summary>
+    public SceneControl()
+    {
+        Instance = this;
+        dict_scene = new Dictionary<string, SceneBase>();
+    }
+    /// <summary>
     /// 切换到指定的场景，必要时注册该场景，并处理场景的退出和进入逻辑。
     /// </summary>
     /// <param name="scene_name">The name of the scene to load.</param>
