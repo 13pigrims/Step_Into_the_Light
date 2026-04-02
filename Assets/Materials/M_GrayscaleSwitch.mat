@@ -20,8 +20,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Mat_ShadowSensor
-  m_Shader: {fileID: 4800000, guid: 69ba64cdfffa97f4495ad6c91e257029, type: 3}
+  m_Name: M_GrayscaleSwitch
+  m_Shader: {fileID: 4800000, guid: b646e47e7e9d22640b5a5da30824e841, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -114,6 +114,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _IsMonochrome: 0
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
