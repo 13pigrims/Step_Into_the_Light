@@ -1,16 +1,42 @@
 using UnityEngine;
+using System;
 
-public class WorldState : MonoBehaviour
+public class WorldState : BaseState
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public override void BackToPreviousState(GameStateSnapshot lastSnapshot)
     {
-        
+        CurrentColor.SetState(lastSnapshot.worldColor);
+    }
+    public override void ExchangeColor()
+    {
+        base.ExchangeColor();
     }
 
-    // Update is called once per frame
-    void Update()
+    public override void HandleButtonPressed()
     {
-        
+        ExchangeColor();
     }
+
+    public override void HandleButtonReleased()
+    {
+        ExchangeColor();
+    }
+
+    public override void Initialize(ButtonManager buttonManager)
+    {
+        _buttonManager = buttonManager;
+        buttonManager.OnObeliskPressed += HandleButtonPressed;
+        buttonManager.OnObeliskReleased += HandleButtonReleased;
+    }
+
+    protected override void Awake()
+    {
+        base.Awake();
+    }
+
+     protected override void OnDestroy()
+     {
+        _buttonManager.OnObeliskPressed -= HandleButtonPressed;
+        _buttonManager.OnObeliskReleased -= HandleButtonReleased;
+     }
 }

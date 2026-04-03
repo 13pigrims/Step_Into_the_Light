@@ -1,20 +1,25 @@
 using UnityEngine;
 using System;
 
+public enum MoveAxis { Horizontal, Vertical, All }
+
 public abstract class BaseState : MonoBehaviour
 {
     [Header("颜色设置")]
     [SerializeField] private ColorType.State initialColor;
-    private ColorType _currentColor;
+    public ColorType CurrentColor { get; private set; }
 
     [Header("移动设置")]
-    [SerializeField] private MoveAxis moveAxis;
-    [SerializeField] private float moveSpeed = 5f;
-    public enum MoveAxis { Horizontal, Vertical, All }
+    [SerializeField] protected MoveAxis moveAxis;
+    [SerializeField] protected float moveSpeed = 5f;
 
     [Header("碰撞设置")]
-    [SerializeField] private float checkDistance = 1f;
-    private Transform _currentTransform;
+    [SerializeField] protected float checkDistance = 1f;
+    protected Transform _currentTransform;
+
+    protected InputManager _inputManager;
+    protected CharacterState _characterState;
+    protected ButtonManager _buttonManager;
 
     // 倾听状态变化回调事件
     public static event Action OnStateChanged;
@@ -22,16 +27,18 @@ public abstract class BaseState : MonoBehaviour
     /// 外部访问当前颜色状态及当前Transform的函数
     /// </summary>
     /// <returns></returns>
-    public ColorType GetColor() { return _currentColor; }
+    public ColorType GetColor() { return CurrentColor; }
     public Transform GetTransform() { return _currentTransform; }
     /// <summary>
     /// 用于初始化的函数
     /// </summary>
-    public virtual void Awake()
+    protected virtual void Awake()
     {
         // 获取物体脚本上的Render并设置
         Renderer renderer = GetComponent<Renderer>();
-        _currentColor = new ColorType(renderer, initialColor);
+        CurrentColor = new ColorType(renderer, initialColor);
+        // 获取当前物体的Transform组件
+        _currentTransform = transform;
     }
     /// <summary>
     /// 初始化接收和订阅事件的函数
@@ -54,7 +61,7 @@ public abstract class BaseState : MonoBehaviour
     /// </summary>
     public virtual void ExchangeColor()
     {
-        _currentColor.Exchange();
+        CurrentColor.Exchange();
         // 颜色变化后通知HistoryManager              
         NotifyStateChanged();
     }
@@ -77,7 +84,10 @@ public abstract class BaseState : MonoBehaviour
     /// <summary>
     /// 用于回调给HistoryManager的方法，通知状态变化以便记录历史
     /// </summary>
-    protected void NotifyStateChanged() { }
+    protected void NotifyStateChanged() 
+    {
+        OnStateChanged?.Invoke();
+    }
     /// <summary>
     /// 用于销毁子类额外订阅的事件的方法
     /// </summary>
