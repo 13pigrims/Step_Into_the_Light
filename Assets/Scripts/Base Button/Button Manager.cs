@@ -1,16 +1,40 @@
 using UnityEngine;
-
-public class ButtonManager : MonoBehaviour
+using System;
+public class ButtonManager
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    // 单例
+    public static ButtonManager Instance;
+
+    // 事件
+    public event Action OnObeliskPressed;
+    public event Action OnObeliskReleased;
+    public event Action OnPedestalPressed;
+    public event Action OnPedestalReleased;
+
+    // 构造函数，由LevelRoot调用
+    public ButtonManager()
     {
-        
+        Instance = this;
     }
 
-    // Update is called once per frame
-    void Update()
+    public static ButtonManager GetInstance()
     {
-        
+        return Instance;
+    }
+
+    public void NotifyButtonPressed(BaseButton button)
+    {
+        if (button is ObeliskButton)
+            OnObeliskPressed?.Invoke();
+        else if (button is PedestalButton)
+            OnPedestalPressed?.Invoke();
+    }
+
+    public void NotifyButtonReleased(BaseButton button)
+    {
+        if (button is ObeliskButton)
+            OnObeliskReleased?.Invoke();
+        else if (button is PedestalButton)
+            OnPedestalReleased?.Invoke();
     }
 }

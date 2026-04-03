@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 
-public class BaseState : MonoBehaviour
+public abstract class BaseState : MonoBehaviour
 {
     [Header("—’…´…Ë÷√")]
     [SerializeField] private ColorType.State initialColor;
