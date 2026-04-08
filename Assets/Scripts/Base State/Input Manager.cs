@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
+using UnityEngine.EventSystems;
 
 public class InputManager
 {
@@ -9,8 +10,13 @@ public class InputManager
     // 输入系统
     private InputAction _moveAction;
     private InputAction _clickAction;
+    public InputAction _pauseAction;
+    public event Action OnMoveEnd;
+    public event Action OnPause;
     // 用于向Level Root回调State的事件
     public event Action<BaseState> OnObjectSelected;
+    public Camera _camera;
+    public EventSystem EventSystem { get => UnityEngine.EventSystems.EventSystem.current; } 
     /// <summary>
     /// 获取InputManager实例的方法，若实例不存在则输出警告
     /// </summary>
@@ -31,20 +37,38 @@ public class InputManager
     /// <summary>
     /// 构造函数，绑定输入事件并启用它们，同时设置回调事件以便在点击时获取State并传递给Level Root
     /// </summary>
-    public InputManager()
+    public InputManager(Camera camera)
     {
+        _camera = camera;
         Instance = this;
         // 绑定移动方法
-        _moveAction = new InputAction("Move", binding: "<Keyboard>/wasd");
+        _moveAction = new InputAction("Move", type: InputActionType.Value);
+        _moveAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
         _moveAction.Enable();
         _clickAction = new InputAction("Click", binding: "<Mouse>/leftButton");
         _clickAction.Enable();
+        _pauseAction = new InputAction("Pause", binding: "<Keyboard>/escape");
+        _pauseAction.Enable();
         // 包含回调事件的方法
         _clickAction.performed += context =>
         {
             BaseState state = OnClick();
             // 将得到的state传到用以回调到Level Root的事件中
             OnObjectSelected?.Invoke(state);
+        };
+        // 按键松开时触发的事件，调用OnMoveEnd事件以通知Level Root记录状态
+        _moveAction.canceled += context =>
+        {
+            OnMoveEnd?.Invoke();
+        };
+        // 暂停事件
+        _pauseAction.performed += context =>
+        {
+            OnPause?.Invoke();
         };
     }
     /// <summary>
@@ -53,14 +77,33 @@ public class InputManager
     /// <returns></returns>
     public BaseState OnClick()
     {
+        if (_camera == null)
+        {
+            Debug.LogError("Camera is null!");
+            return null;
+        }
+        // 检查相机是否调用成功
+        Debug.Log("Camera found: " + _camera.name);
+        // 如果点击的是UI层，不处理
+        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            return null;
         // 从摄像机发射射线到鼠标位置
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        Ray ray = _camera.ScreenPointToRay(Mouse.current.position.ReadValue());
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
+            Debug.Log($"射线命中: {hit.collider.gameObject.name}");
+            // 先在当前物体找，找不到就往父物体找
             BaseState state = hit.collider.GetComponent<BaseState>();
+            if (state == null)
+                state = hit.collider.GetComponentInParent<BaseState>();
+
+            Debug.Log($"BaseState: {state}");
+            if (state != null)
+                Debug.Log($"IsInteractive: {state.IsInteractive()}");
             if (state != null && state.IsInteractive())
                 return state;
         }
+        // Debug.LogError("No interactive object hit.");
         return null; // 点到空白或不可交互物体，返回null
     }
     /// <summary>
@@ -70,7 +113,7 @@ public class InputManager
     public Vector3 OnMove()
     {
         Vector2 input = _moveAction.ReadValue<Vector2>();
-        return new Vector3(input.x, 0, input.y);
+        return new Vector3(-input.x, 0, -input.y);
     }
     /// <summary>
     /// 释放InputAction，在LevelRoot的OnDestroy里调用
@@ -79,5 +122,6 @@ public class InputManager
     {
         _moveAction.Disable();
         _clickAction.Disable();
+        _pauseAction.Disable();
     }
 }

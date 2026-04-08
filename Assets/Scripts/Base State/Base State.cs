@@ -35,10 +35,15 @@ public abstract class BaseState : MonoBehaviour
     protected virtual void Awake()
     {
         // 获取物体脚本上的Render并设置
-        Renderer renderer = GetComponent<Renderer>();
-        CurrentColor = new ColorType(renderer, initialColor);
+        Renderer renderer = GetComponentInChildren<Renderer>();
+        if (renderer != null)
+            CurrentColor = new ColorType(renderer, initialColor);
+        else
+            Debug.LogError($"{gameObject.name} 没有找到Renderer!");
         // 获取当前物体的Transform组件
         _currentTransform = transform;
+        Debug.Log($"BaseState Awake: Initialized for {gameObject.name} with initial color {initialColor}");
+        Debug.Log($"BaseState Awake: _currentTransform set to {(_currentTransform != null ? _currentTransform.name : "null")}");
     }
     /// <summary>
     /// 初始化接收和订阅事件的函数

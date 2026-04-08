@@ -2,22 +2,36 @@ using UnityEngine;
 
 public class LevelRoot : MonoBehaviour
 {
+    public static LevelRoot Instance;
     // 各类管理器实例
     private ButtonManager buttonManager_root;
     private InputManager inputManager_root;
-    private HistoryManager historyManager_root;
+    public HistoryManager historyManager_root;
     // 各类物体状态
     private WorldState _worldState;
     private CharacterState _characterState;
     private ObjectState[] _objectStates;
     // 当前选中物体
     private BaseState _objSelectedState;
+    public Camera MainCamera { get => Camera.main; }
+
+    public static LevelRoot GetInstance()
+    {
+        if (Instance == null)
+        {
+            Debug.LogWarning("Game Root实例化失败!");
+            return null;
+        }
+        return Instance;
+    }
 
     private void Awake()
     {
+        // 测试能否获取主相机
+        Debug.Log($"MainCamera: {MainCamera}");
         // 先实例化ButtonManager
         buttonManager_root = new ButtonManager();
-        inputManager_root = new InputManager();
+        inputManager_root = new InputManager(MainCamera);
 
         // 获取场景中所有BaseButton子类
         var allButtons = GetComponentsInChildren<BaseButton>();
@@ -29,28 +43,51 @@ public class LevelRoot : MonoBehaviour
         }
 
         // 获取场景中的MonoBehaviour组件
-        _worldState = GetComponentInChildren<WorldState>();
-        _characterState = GetComponentInChildren<CharacterState>();
-        _objectStates = GetComponentsInChildren<ObjectState>();
+        _worldState = FindObjectsByType<WorldState>(FindObjectsSortMode.None)[0];
+        _characterState = FindObjectsByType<CharacterState>(FindObjectsSortMode.None)[0];
+        _objectStates = FindObjectsByType<ObjectState>(FindObjectsSortMode.None);
 
-        // 实例化HistoryManager
-        historyManager_root = new HistoryManager(_worldState, _characterState, _objectStates);
+        Debug.Log($"WorldState: {_worldState}");
+        Debug.Log($"CharacterState: {_characterState}");
+        Debug.Log($"ObjectStates数量: {_objectStates.Length}");
+        Debug.Log($"ObjectStates: {_objectStates[0]}");
 
         // 把ButtonManager注入给需要它的组件
         _worldState.Initialize(buttonManager_root);
+        Debug.Log($"注入ButtonManager给CharacterState: {_characterState}, ButtonManager: {buttonManager_root}");
         _characterState.Initialize(buttonManager_root);
-        foreach (var obj in _objectStates)
+        foreach (ObjectState obj in _objectStates)
         {
             obj.Initialize(buttonManager_root);
         }
+        Debug.Log($"注入ButtonManager给ObjectStates, ButtonManager: {buttonManager_root}");
         // 把InputManager注入给所需组件
         _characterState.InitializeInput(inputManager_root, _characterState);
-        foreach (var obj in _objectStates)
+        // Debug.Log($"注入CharacterState给CharacterState: {_characterState}, CharacterState: {_characterState}");
+        foreach (ObjectState obj in _objectStates)
         {
+           
             obj.InitializeInput(inputManager_root, _characterState);
         }
+        // Debug.Log($"注入CharacterState给ObjectStates, CharacterState: {_characterState}");
         // 调用InputManager中的OnObjectSelected事件
         inputManager_root.OnObjectSelected += HandleObjectSelected;
+        // 调用CharacterState中的OnGameOver事件
+        CharacterState.OnGameOver += HandleGameOver;
+        // 订阅InputManager的OnPause事件
+        inputManager_root.OnPause += HandleGameOver;
+        // Debug.Log($"订阅InputManager的OnObjectSelected事件, InputManager: {inputManager_root}");
+        inputManager_root.OnMoveEnd += () =>
+        {
+            if (_objSelectedState != null)
+                historyManager_root.RecordState();
+        };
+    }
+
+    private void Start()
+    {
+        // 所有Awake都执行完之后再构造HistoryManager
+        historyManager_root = new HistoryManager(_worldState, _characterState, _objectStates);
     }
 
     private void Update()
@@ -58,7 +95,9 @@ public class LevelRoot : MonoBehaviour
         // 当被选择物体不为空时，检测移动
         if (_objSelectedState != null)
         {
+            // Debug.Log($"当前选中物体: {_objSelectedState.gameObject.name}");
             Vector3 movement = inputManager_root.OnMove();
+            // Debug.Log($"movement: {movement}");
 
             if (movement != Vector3.zero)
             {
@@ -68,7 +107,6 @@ public class LevelRoot : MonoBehaviour
                     if (characterState.canMoveOn(movement))
                     {
                         characterState.Move(movement);
-                        historyManager_root.RecordState();
                     }
                 }
                 else if (_objSelectedState is ObjectState objState)
@@ -77,19 +115,28 @@ public class LevelRoot : MonoBehaviour
                     if (objState.canMoveOn(movement))
                     {
                         objState.Move(movement);
-                        historyManager_root.RecordState();
                     }
                 }
             }
         }
         // 检测是否按下撤回键
         if (historyManager_root.IsUndoPressed())
+        {
+            Debug.Log("撤回键被按下，执行撤回操作");
             historyManager_root.Undo();
+        }
+           
     }
 
     private void HandleObjectSelected(BaseState state)
     {
         _objSelectedState = state;
+    }
+
+    private void HandleGameOver()
+    {
+        // 通知GameRoot弹出Game Over Panel
+        GameRoot.GetInstance().UIManager_Root.PushPanel(new GameOverPanel());
     }
 
     private void OnDestroy()
@@ -98,5 +145,6 @@ public class LevelRoot : MonoBehaviour
         historyManager_root.Dispose();
         inputManager_root.Dispose();
         inputManager_root.OnObjectSelected -= HandleObjectSelected;
+        CharacterState.OnGameOver -= HandleGameOver;
     }
 }

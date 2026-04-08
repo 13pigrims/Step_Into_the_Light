@@ -8,6 +8,7 @@ TagManager:
   - Blocks
   - SensorCam
   - Walls
+  - Shadow
   layers:
   - Default
   - TransparentFX

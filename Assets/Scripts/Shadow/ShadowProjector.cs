@@ -67,6 +67,8 @@ public class ShadowProjector : MonoBehaviour
     {
         // 1) 获取本体MeshFilter（作为源网格）
         _meshFilter = GetComponent<MeshFilter>();
+        Debug.Log($"已获取本体物体的Mesh Collider");
+
 
         // 2) 找到子物体 ShadowCollider（你需要在层级里手工建立这个子物体）
         var child = transform.Find("ShadowCollider");

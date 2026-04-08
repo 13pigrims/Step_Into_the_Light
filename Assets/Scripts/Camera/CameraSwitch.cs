@@ -4,40 +4,50 @@ using UnityEngine.InputSystem;
 
 public class CameraSwitch : MonoBehaviour
 {
-    [SerializeField] private CinemachineVirtualCamera tpsCamera;
+    [SerializeField] private CinemachineVirtualCamera isometricCamera;
     [SerializeField] private CinemachineVirtualCamera topDownCamera;
 
-    private bool isTopDown = false;
-    bool IsChangeCamera;
+    private bool _isTopDown = false;
+    // 创建一个InputAction用于绑定键位输入
+    private InputAction _switchCameraAction;
 
-    public void OnChangeCamera(InputAction.CallbackContext ctx)
+    private void Awake()
     {
-        IsChangeCamera = ctx.ReadValueAsButton();
-    }
-
-    // 在 Update 里监听按键
-    void Update()
-    {
-        if (IsChangeCamera)
-        {
-            ToggleCamera();
-        }
+        // 初始化 InputAction，绑定到 "C" 键
+        _switchCameraAction = new InputAction("SwitchCamera", binding: "<Keyboard>/tab");
+        _switchCameraAction.performed += ctx => ToggleCamera();
     }
 
     public void ToggleCamera()
     {
-        isTopDown = !isTopDown;
-        SetCamera(isTopDown);
+        Debug.Log("切换相机");
+        _isTopDown = !_isTopDown;
+        SetCamera(_isTopDown);
     }
 
     // 也可以从 UI 按钮或其他脚本直接调用这两个方法
-    public void SwitchToTPS() => SetCamera(false);
+    public void SwitchToIsometric() => SetCamera(false);
     public void SwitchToTopDown() => SetCamera(true);
 
     private void SetCamera(bool topDown)
     {
         // Brain 会自动 blend 到 Priority 更高的那个
-        tpsCamera.Priority = topDown ? 10 : 11;
+        isometricCamera.Priority = topDown ? 10 : 11;
         topDownCamera.Priority = topDown ? 11 : 10;
+    }
+
+    private void OnEnable()
+    {
+        _switchCameraAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        _switchCameraAction.Disable();
+    }
+
+    private void OnDestroy()
+    {
+        _switchCameraAction.Disable();
     }
 }

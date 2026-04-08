@@ -24,9 +24,11 @@ public class WorldState : BaseState
 
     public override void Initialize(ButtonManager buttonManager)
     {
+        Debug.Log($"WorldState.Initialize开始, buttonManager: {buttonManager}");
         _buttonManager = buttonManager;
         buttonManager.OnObeliskPressed += HandleButtonPressed;
         buttonManager.OnObeliskReleased += HandleButtonReleased;
+        Debug.Log("WorldState.Initialize完成");
     }
 
     protected override void Awake()

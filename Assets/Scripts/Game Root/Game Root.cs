@@ -1,8 +1,11 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class GameRoot : MonoBehaviour
 {
     public static GameRoot Instance;
+    public EventSystem EventSystem { get => UnityEngine.EventSystems.EventSystem.current; }
+    public static Camera MainCamera { get => Camera.main; }
 
     private UIManager UIManager;
     public UIManager UIManager_Root { get => UIManager; }
@@ -31,6 +34,7 @@ public class GameRoot : MonoBehaviour
         {
             Destroy(this.gameObject);
         }
+        DontDestroyOnLoad(MainCamera);
         UIManager = new UIManager();
         SceneControl = new SceneControl();
     }
@@ -39,6 +43,7 @@ public class GameRoot : MonoBehaviour
     {
         // 使GameRoot在场景切换时不会被销毁，保持其持久性,并且在游戏开始时找到当前场景中的Canvas和加载初始场景和UI
         DontDestroyOnLoad(this);
+        DontDestroyOnLoad(EventSystem);
         UIManager_Root.CanvasObj = UIMethod.GetInstance().FindCanvas();
         // 初始化场景控制器，加载初始场景
         Scene1 scene1 = new Scene1();

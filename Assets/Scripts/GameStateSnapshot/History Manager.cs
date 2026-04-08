@@ -41,11 +41,14 @@ public class HistoryManager
         _worldState = worldState;
         _characterState = characterState;
         _objectStates = objectStates;
+        //Debug
+        Debug.Log($"HistoryManager构造开始");
         // 往栈内压入初始状态
         GameStateSnapshot initialSnapshot = new GameStateSnapshot(_worldState, _characterState, _objectStates);
+        Debug.Log($"Initial GameStateSnapshot created;");
         _historyStack.Push(initialSnapshot);
         // 订阅BaseState中的事件，一有状态变化，生成新的快照
-        BaseState.OnStateChanged += RecordState;
+        // BaseState.OnStateChanged += RecordState;
     }
     /// <summary>
     /// 当状态发生变化时，创建一个新的GameStateSnapshot对象，并将当前的世界状态、角色状态和物体状态传递给它。然后，将这个快照压入历史栈中，以便后续的撤销操作可以访问到这个状态。
@@ -61,7 +64,7 @@ public class HistoryManager
     /// <returns></returns>
     public bool IsUndoPressed()
     {
-        return Keyboard.current.rKey.wasPressedThisFrame;
+        return Keyboard.current.zKey.wasPressedThisFrame;
     }
     /// <summary>
     /// 执行撤销操作。首先，检查历史栈中是否有足够的状态可以撤销（至少需要两个状态，一个是当前状态，一个是之前的状态）。如果满足条件，从历史栈中弹出当前状态，并将上一个状态应用到游戏世界中，以实现撤销效果。

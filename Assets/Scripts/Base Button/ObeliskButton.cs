@@ -14,7 +14,9 @@ public class ObeliskButton : BaseButton
         foreach (var col in colliders)
         {
             if (col.CompareTag("Shadow"))
+            {  Debug.Log($"ObeliskButton {name} is covered by ShadowCollider {col.name}, state change triggered.");
                 return true;
+            }
         }
         return false;
     }

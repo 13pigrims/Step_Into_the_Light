@@ -36,6 +36,20 @@ public class ObjectState : BaseState
         }
     }
 
+    public override void InitializeInput(InputManager inputManager, CharacterState characterState)
+    {
+        _inputManager = inputManager;
+        _characterState = characterState;
+        Debug.Log(_characterState != null ? $"ObjectState {name} successfully linked to CharacterState {_characterState.name}" : $"ObjectState {name} failed to link to CharacterState");
+    }
+
+    public override bool IsInteractive()
+    {
+        bool isSameColor = CurrentColor.GetState() == _characterState.GetColor().GetState();
+        return isSameColor;
+    }
+
+
     public override bool canMoveOn(Vector3 movement)
     {
         if (Physics.Raycast(_currentTransform.position, movement.normalized, out RaycastHit hit, checkDistance))
@@ -46,17 +60,6 @@ public class ObjectState : BaseState
                 return false;
         }
         return true;
-    }
-
-    public override void InitializeInput(InputManager inputManager, CharacterState characterState)
-    {
-        _inputManager = inputManager;
-        _characterState = characterState;
-    }
-
-    public override bool IsInteractive()
-    {
-        return CurrentColor.GetState() == _characterState.GetColor().GetState();
     }
 
     public override void Move(Vector3 movement)
@@ -72,8 +75,6 @@ public class ObjectState : BaseState
         _currentTransform.position += filteredMovement * moveSpeed * Time.deltaTime;
         // 更新currentTransform
         _currentTransform = transform;
-        // 当前位移发生变化时，回调给HistoryManager
-        NotifyStateChanged();
     }
 
 }

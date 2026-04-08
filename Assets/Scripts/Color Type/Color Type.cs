@@ -32,6 +32,7 @@ public class ColorType
     /// </summary>
     private void ApplyShader()
     {
+        if (_renderer == null) return; // 没有Renderer就跳过
         _renderer.material.SetFloat("_IsMonochrome",
            _currentState == State.Monochrome ? 1f : 0f);
     }

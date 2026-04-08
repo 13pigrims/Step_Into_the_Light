@@ -19,7 +19,16 @@ public class ButtonManager
 
     public static ButtonManager GetInstance()
     {
-        return Instance;
+        // 初始化访问到的Instance
+        if (Instance == null)
+        {
+            Debug.LogError("ButtonManager实体不存在！");
+            return null;
+        }
+        else
+        {
+            return Instance;
+        }
     }
 
     public void NotifyButtonPressed(BaseButton button)
