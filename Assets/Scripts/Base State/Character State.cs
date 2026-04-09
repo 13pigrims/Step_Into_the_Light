@@ -5,6 +5,8 @@ public class CharacterState : BaseState
 {
     // 游戏结束事件，供外部订阅
     public static event Action OnGameOver;
+    private bool _isGameOver;
+
     public override void BackToPreviousState(GameStateSnapshot lastSnapshot)
     {
         CurrentColor.SetState(lastSnapshot.characterColor);
@@ -13,14 +15,20 @@ public class CharacterState : BaseState
 
     public override bool canMoveOn(Vector3 movement)
     {
-        if (Physics.Raycast(_currentTransform.position, movement.normalized, out RaycastHit hit, checkDistance))
+        // 脚部的射线检测
+        Vector3 feetPos = _currentTransform.position + Vector3.up * 0.1f;
+        if (Physics.Raycast(feetPos, Vector3.down, out RaycastHit shadowHit, 0.5f))
         {
-            if (hit.collider.CompareTag("Shadow"))
+            if (shadowHit.collider.CompareTag("Shadow"))
             {
-                // TODO: 接入Game Over Panel
+                if (!_isGameOver)
+                {
+                    _isGameOver = true;
+                    GameRoot.GetInstance().UIManager_Root.PushPanel(new GameOverPanel());
+                }
                 return false;
             }
-            if (hit.collider.CompareTag("Wall") || hit.collider.CompareTag("Object"))
+            if (shadowHit.collider.CompareTag("Wall") || shadowHit.collider.CompareTag("Object"))
                 return false;
         }
         return true;
@@ -69,6 +77,11 @@ public class CharacterState : BaseState
     private void TriggerGameOver()
     {
         OnGameOver?.Invoke();
+    }
+
+    public void ResetGameOver()
+    {
+        _isGameOver = false;
     }
 
     protected override void OnDestroy()

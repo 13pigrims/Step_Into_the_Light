@@ -6,6 +6,8 @@ public class ColorType
     public enum State { Colored, Monochrome };
     [SerializeField] private State _currentState;
     private Renderer _renderer;
+    private Material _coloredMat;
+    private Material _monochromeMat;
     /// <summary>
     /// 用于获取当前状态的函数和设置当前状态的函数
     /// </summary>
@@ -21,10 +23,12 @@ public class ColorType
     /// </summary>
     /// <param name="renderer"></param>
     /// <param name="initialState"></param>
-    public ColorType(Renderer renderer, State initialState)
+    public ColorType(Renderer renderer, State initialState, Material monochromeMat)
     {
         _renderer = renderer;
         _currentState = initialState;
+        _coloredMat = renderer.sharedMaterial; // 保存原始材
+        _monochromeMat = monochromeMat;
         ApplyShader();
     }
     /// <summary>
@@ -32,9 +36,15 @@ public class ColorType
     /// </summary>
     private void ApplyShader()
     {
-        if (_renderer == null) return; // 没有Renderer就跳过
-        _renderer.material.SetFloat("_IsMonochrome",
-           _currentState == State.Monochrome ? 1f : 0f);
+        if (_renderer == null)
+        {
+            Debug.LogWarning("Renderer is null!");
+            return;
+        }
+        _renderer.material = _currentState == State.Monochrome
+            ? _monochromeMat
+            : _coloredMat;
+
     }
     /// <summary>
     /// 根据状态切换颜色模式的函数
@@ -45,6 +55,7 @@ public class ColorType
         _currentState = (_currentState == State.Colored)
              ? State.Monochrome
              : State.Colored;
+        Debug.Log($"Switched to {_currentState} mode.");
         //  应用当前状态
         ApplyShader();
     }

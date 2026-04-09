@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class LevelRoot : MonoBehaviour
@@ -19,7 +20,7 @@ public class LevelRoot : MonoBehaviour
     {
         if (Instance == null)
         {
-            Debug.LogWarning("Game Root实例化失败!");
+            Debug.LogWarning("Level Root实例化失败!");
             return null;
         }
         return Instance;
@@ -27,6 +28,12 @@ public class LevelRoot : MonoBehaviour
 
     private void Awake()
     {
+        // 确保LevelRoot是单例
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+
         // 测试能否获取主相机
         Debug.Log($"MainCamera: {MainCamera}");
         // 先实例化ButtonManager
@@ -41,6 +48,7 @@ public class LevelRoot : MonoBehaviour
         {
             button.Initialize(buttonManager_root);
         }
+        Debug.Log($"初始化ButtonManager给所有BaseButton子类, ButtonManager: {buttonManager_root}, BaseButtons数量: {allButtons.Length}");
 
         // 获取场景中的MonoBehaviour组件
         _worldState = FindObjectsByType<WorldState>(FindObjectsSortMode.None)[0];
@@ -137,6 +145,14 @@ public class LevelRoot : MonoBehaviour
     {
         // 通知GameRoot弹出Game Over Panel
         GameRoot.GetInstance().UIManager_Root.PushPanel(new GameOverPanel());
+    }
+
+    public void UndoLastStep()
+    {
+        Debug.Log($"GameRoot.Instance: {GameRoot.Instance}");
+        Debug.Log($"LevelRoot.Instance: {LevelRoot.Instance}");
+        historyManager_root.Undo();
+        _characterState.ResetGameOver();
     }
 
     private void OnDestroy()

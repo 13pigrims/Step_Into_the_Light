@@ -7,6 +7,7 @@ public abstract class BaseState : MonoBehaviour
 {
     [Header("颜色设置")]
     [SerializeField] private ColorType.State initialColor;
+    [SerializeField] private Material monochromeMaterial; // 新增，Inspector里拖入灰度材质
     public ColorType CurrentColor { get; private set; }
 
     [Header("移动设置")]
@@ -37,7 +38,7 @@ public abstract class BaseState : MonoBehaviour
         // 获取物体脚本上的Render并设置
         Renderer renderer = GetComponentInChildren<Renderer>();
         if (renderer != null)
-            CurrentColor = new ColorType(renderer, initialColor);
+            CurrentColor = new ColorType(renderer, initialColor, monochromeMaterial);
         else
             Debug.LogError($"{gameObject.name} 没有找到Renderer!");
         // 获取当前物体的Transform组件

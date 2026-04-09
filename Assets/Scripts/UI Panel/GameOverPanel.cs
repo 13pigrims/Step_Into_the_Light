@@ -42,9 +42,16 @@ public class GameOverPanel : BasePanel
     private void UndoLastStep()
     {
         Debug.Log("Undo Button Clicked!");
-        // 在这里添加点击Undo按钮后的逻辑，例如，调用HistoryManager的撤回方法等
+        Debug.Log($"GameRoot.Instance: {GameRoot.Instance}");
+
+        if (GameRoot.Instance == null)
+        {
+            Debug.LogError("GameRoot是null，无法继续");
+            return;
+        }
+
         GameRoot.GetInstance().UIManager_Root.PopPanel(true);
-        LevelRoot.GetInstance().historyManager_root.Undo();
+        LevelRoot.GetInstance().UndoLastStep();
     }
     /// <summary>
     /// 触发Restart按钮点击事件的方法

@@ -120,6 +120,14 @@ public class ShadowProjector : MonoBehaviour
             if (!child.CompareTag("Shadow"))
                 child.tag = "Shadow";
         }
+        UpdateShadowColliderMesh();
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (_shadowMesh == null) return;
+        Gizmos.color = new Color(1, 0, 0, 0.3f);
+        Gizmos.DrawMesh(_shadowMesh, _shadowColliderTransform.position);
     }
 
     private void LateUpdate()
@@ -184,6 +192,9 @@ public class ShadowProjector : MonoBehaviour
         // 4) 刷新 MeshCollider（sharedMesh 直接替换有时不会立刻更新，先置空更稳）
         _shadowCollider.sharedMesh = null;
         _shadowCollider.sharedMesh = _shadowMesh;
+        // 同步mesh到MeshFilter用于可视化
+        MeshFilter mf = _shadowColliderTransform.GetComponent<MeshFilter>();
+        if (mf != null) mf.sharedMesh = _shadowMesh;
     }
 
     /// <summary>
@@ -199,7 +210,7 @@ public class ShadowProjector : MonoBehaviour
         // 使用主光：Directional Light 的 forward 指向“光照射方向的反方向”
         // 所以取 -forward 才是光线传播方向（常见约定）
         if (mainLight != null)
-            return (-mainLight.transform.forward).normalized;
+            return mainLight.transform.forward.normalized;
 
         // 没有光时默认向下投影
         return Vector3.down;

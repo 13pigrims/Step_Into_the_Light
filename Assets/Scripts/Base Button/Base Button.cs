@@ -4,63 +4,79 @@ using System;
 public abstract class BaseButton : MonoBehaviour
 {
     // 状态成员
-    private bool _isNowPressed;
-    private bool _isBeforePressed;
     private bool _isPressed;
     public bool IsPressed { get { return _isPressed; } private set { _isPressed = value; } }
+
     // 事件
     public static event Action OnShadowPressed;
     public static event Action OnShadowWithdraw;
+
     // 依赖
     private ButtonManager _buttonManager;
+
     /// <summary>
-    /// 初始化方法，注入ButtonManager依赖
+    /// 注入ButtonManager依赖
     /// </summary>
-    /// <param name="buttonManager"></param>
     public void Initialize(ButtonManager buttonManager)
     {
         _buttonManager = buttonManager;
+        Debug.Log($"ButtonManager注入成功: {name}");
     }
+
     /// <summary>
-    /// 更新方法，检测按压状态变化并触发事件
+    /// 影子进入时触发按压事件
     /// </summary>
-    protected virtual void Update()
+    private void OnTriggerEnter(Collider other)
     {
-        _isBeforePressed = _isNowPressed;
-        _isNowPressed = IsChangeStatePressed();
-    // 从上一帧未按压到当前帧被按压
-    if (!_isBeforePressed && _isNowPressed)
+        Debug.Log($"OnTriggerEnter: {name} 检测到 {other.name}, Tag: {other.tag}");
+        if (other.CompareTag("Shadow"))
         {
-            IsPressed = true;
+            _isPressed = true;
+            Debug.Log($"{name} 被影子覆盖，触发Pressed");
             OnShadowPressed?.Invoke();
             NotifyStateChanged(true);
         }
-        // 从上一帧按压状态到当前帧被释放
-        else if (_isBeforePressed && !_isNowPressed)
+    }
+
+    /// <summary>
+    /// 影子离开时触发释放事件
+    /// </summary>
+    private void OnTriggerExit(Collider other)
+    {
+        Debug.Log($"OnTriggerExit: {name} 检测到 {other.name} 离开, Tag: {other.tag}");
+        if (other.CompareTag("Shadow"))
         {
-            IsPressed = false;
+            _isPressed = false;
+            Debug.Log($"{name} 影子撤出，触发Released");
             OnShadowWithdraw?.Invoke();
             NotifyStateChanged(false);
         }
     }
-    /// <summary>
-    /// 子类中实现具体的按压状态检测逻辑
-    /// </summary>
-    /// <returns></returns>
-    public virtual bool IsChangeStatePressed() { return false; }
+
     /// <summary>
     /// 通知ButtonManager当前按钮状态变化
     /// </summary>
-    /// <param name="isPressed"></param>
     protected virtual void NotifyStateChanged(bool isPressed)
     {
+        if (_buttonManager == null)
+        {
+            Debug.LogError($"ButtonManager未注入: {name}");
+            return;
+        }
         if (isPressed)
+        {
+            Debug.Log($"{name} 通知ButtonManager: Pressed");
             _buttonManager.NotifyButtonPressed(this);
+        }
         else
+        {
+            Debug.Log($"{name} 通知ButtonManager: Released");
             _buttonManager.NotifyButtonReleased(this);
+        }
     }
+
     /// <summary>
-    /// 子类如果有额外订阅时在这里取消，避免内存泄漏
+    /// 子类如果有额外订阅时在这里取消
     /// </summary>
     protected virtual void OnDestroy() { }
 }
