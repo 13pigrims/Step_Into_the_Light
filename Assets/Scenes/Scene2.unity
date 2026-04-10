@@ -309,6 +309,7 @@ GameObject:
   m_Component:
   - component: {fileID: 247525178}
   - component: {fileID: 247525181}
+  - component: {fileID: 247525182}
   m_Layer: 0
   m_Name: Object 1
   m_TagString: Untagged
@@ -350,6 +351,20 @@ MonoBehaviour:
   moveSpeed: 5
   checkDistance: 1
   objectID: 0
+--- !u!114 &247525182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 247525177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0b7fde700b510440b1d7dc821d18135, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RotationCalculator
+  SunLight: {fileID: 579596240}
+  speed: 1
 --- !u!1 &303729892 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 807893b08959e8045a7bac4976654ac6, type: 3}
@@ -367,6 +382,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35d5fccfb5c825543b660d414e13730a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ObeliskButton
+  overlapScale: 0.5
 --- !u!65 &303729896
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -384,7 +400,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 0.6, y: 0.099999994, z: 0.6}
   m_Center: {x: 0, y: 0.049999997, z: 0}

@@ -57,12 +57,20 @@ public class InputManager
         _clickAction.performed += context =>
         {
             BaseState state = OnClick();
+            // 获得可交互物体，播放click音效
+            if (state != null) 
+            {
+                var audio = GameRoot.GetInstance().AudioManager_Root;
+                var clip = GameRoot.GetInstance().ClickClip;
+                if (clip != null) audio.PlaySFX(clip);
+            }
             // 将得到的state传到用以回调到Level Root的事件中
             OnObjectSelected?.Invoke(state);
         };
         // 按键松开时触发的事件，调用OnMoveEnd事件以通知Level Root记录状态
         _moveAction.canceled += context =>
         {
+            // Move音效在BaseState的Move方法里播放，这里只负责通知Level Root记录状态
             OnMoveEnd?.Invoke();
         };
         // 暂停事件

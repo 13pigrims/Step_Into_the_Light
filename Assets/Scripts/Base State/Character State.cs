@@ -38,6 +38,11 @@ public class CharacterState : BaseState
     {
         _currentTransform.position += movement * moveSpeed * Time.deltaTime;
         _currentTransform = transform;
+        // 播放移动音效，只有当角色实际移动时才播放
+        if (movement.sqrMagnitude > 0.01f)
+        {
+            GameRoot.GetInstance().AudioManager_Root.PlaySFX(GameRoot.GetInstance().MoveClip);
+        }
     }
 
     public override void Initialize(ButtonManager buttonManager)

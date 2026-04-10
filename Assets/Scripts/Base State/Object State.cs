@@ -75,6 +75,10 @@ public class ObjectState : BaseState
         _currentTransform.position += filteredMovement * moveSpeed * Time.deltaTime;
         // ¸üÐÂcurrentTransform
         _currentTransform = transform;
+        if (movement.sqrMagnitude > 0.01f)
+        {
+            GameRoot.GetInstance().AudioManager_Root.PlaySFX(GameRoot.GetInstance().MoveClip);
+        }
     }
 
 }

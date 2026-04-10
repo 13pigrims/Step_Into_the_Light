@@ -9,9 +9,17 @@ public class GameRoot : MonoBehaviour
 
     private UIManager UIManager;
     public UIManager UIManager_Root { get => UIManager; }
-
     private SceneControl SceneControl;
     public SceneControl SceneControl_Root { get => SceneControl; }
+    private AudioManager _audioManager;
+    public AudioManager AudioManager_Root => _audioManager;
+
+    [Header("Audio")]
+    [SerializeField] private AudioClip bgmClip;
+    [SerializeField] private AudioClip clickClip;
+    [SerializeField] private AudioClip moveClip;
+    public AudioClip ClickClip => clickClip;
+    public AudioClip MoveClip => moveClip;
 
     public static GameRoot GetInstance()
     {
@@ -36,8 +44,14 @@ public class GameRoot : MonoBehaviour
             Destroy(this.gameObject);
         }
         DontDestroyOnLoad(MainCamera);
+        // 初始化BGM和SFX的AudioSource组件，并将它们设置为GameRoot的子对象，以便在场景切换时保持持久性
+        _audioManager = new AudioManager(gameObject);
+        if (bgmClip != null)
+            _audioManager.PlayBGM(bgmClip);
+        // 构造各类管理器
         UIManager = new UIManager();
         SceneControl = new SceneControl();
+        _audioManager = new AudioManager(gameObject);
     }
 
     private void Start()
@@ -53,4 +67,5 @@ public class GameRoot : MonoBehaviour
         UIManager_Root.PushPanel(new StartPanel());
         #endregion
     }
+
 }
