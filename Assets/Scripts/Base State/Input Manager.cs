@@ -16,7 +16,17 @@ public class InputManager
     // 用于向Level Root回调State的事件
     public event Action<BaseState> OnObjectSelected;
     public Camera _camera;
-    public EventSystem EventSystem { get => UnityEngine.EventSystems.EventSystem.current; } 
+    public EventSystem EventSystem { get => UnityEngine.EventSystems.EventSystem.current; }
+    // 栅格化输入
+    // 上一帧输入值
+    private Vector2 _lastInput;
+    // 如有按键重复，延迟输入后移动
+    private float _holdTimer;
+    private bool _isHolding;
+    private const float HOLD_DELAY = 0.3f;    // 按住多久后开始连续移动
+    private const float HOLD_INTERVAL = 0.15f; // 连续移动的间隔
+    private float _repeatTimer;
+
     /// <summary>
     /// 获取InputManager实例的方法，若实例不存在则输出警告
     /// </summary>
@@ -29,10 +39,7 @@ public class InputManager
             Debug.LogError("InputManager实体不存在！");
             return null;
         }
-        else
-        {
             return Instance;
-        }
     }
     /// <summary>
     /// 构造函数，绑定输入事件并启用它们，同时设置回调事件以便在点击时获取State并传递给Level Root
@@ -70,6 +77,9 @@ public class InputManager
         // 按键松开时触发的事件，调用OnMoveEnd事件以通知Level Root记录状态
         _moveAction.canceled += context =>
         {
+            _holdTimer = 0f;
+            _isHolding = false; 
+            _repeatTimer = 0f;
             // Move音效在BaseState的Move方法里播放，这里只负责通知Level Root记录状态
             OnMoveEnd?.Invoke();
         };
@@ -104,25 +114,71 @@ public class InputManager
             BaseState state = hit.collider.GetComponent<BaseState>();
             if (state == null)
                 state = hit.collider.GetComponentInParent<BaseState>();
-
-            Debug.Log($"BaseState: {state}");
             if (state != null)
                 Debug.Log($"IsInteractive: {state.IsInteractive()}");
             if (state != null && state.IsInteractive())
                 return state;
         }
-        // Debug.LogError("No interactive object hit.");
         return null; // 点到空白或不可交互物体，返回null
     }
     /// <summary>
-    /// 实际处理移动输入的方法，读取输入值并转换为Vector3格式以供Level Root使用
+    /// 返回离散的移动方向，按下后返回一次方向，按住一段时间后开始重复
+    /// 当返回Vector3.zero时表示没有输入或输入被延迟，Level Root在收到Vector3.zero时记录状态并不移动物体和角色
     /// </summary>
     /// <returns></returns>
     public Vector3 OnMove()
     {
         Vector2 input = _moveAction.ReadValue<Vector2>();
-        return new Vector3(-input.x, 0, -input.y);
+        //没有输入时
+        if (input == Vector2.zero)
+        {
+            _lastInput = Vector2.zero;
+            _holdTimer = 0f;
+            _isHolding = false;
+            _repeatTimer = 0f;
+            return Vector3.zero;
+        }
+        // 量化输入值
+        Vector2 discrete = QuantizeToCardinal(input);
+        // 当上帧无输入，当前帧存在输入,且未长按时
+        if (_lastInput == Vector2.zero)
+        {
+            _lastInput = discrete;
+            _holdTimer = 0f;
+            _isHolding = false;
+            return new Vector3(-discrete.x, 0, -discrete.y);
+        }
+
+        // 当输入持续且长按时
+        _holdTimer += Time.deltaTime;
+        if (_holdTimer >= HOLD_DELAY)
+        {
+            _repeatTimer += Time.deltaTime;
+            if (!_isHolding || _repeatTimer >= HOLD_INTERVAL)
+            {
+                _isHolding = true;
+                _repeatTimer = 0f;
+                _lastInput = discrete;
+                return new Vector3(-discrete.x, 0, -discrete.y);
+            }
+        }
+
+        _lastInput = discrete;
+        return Vector3.zero;
     }
+    /// <summary>
+    /// 将输入量化为四个方向之一，只保留绝对值最大的轴
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    private Vector2 QuantizeToCardinal(Vector2 input)
+    { 
+        if (Mathf.Abs(input.x) >= Mathf.Abs(input.y))
+            return new Vector2(Mathf.Sign(input.x), 0);
+        else
+            return new Vector2(0, Mathf.Sign(input.y));
+    }
+
     /// <summary>
     /// 释放InputAction，在LevelRoot的OnDestroy里调用
     /// </summary>

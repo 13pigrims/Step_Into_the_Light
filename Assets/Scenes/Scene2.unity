@@ -309,7 +309,6 @@ GameObject:
   m_Component:
   - component: {fileID: 247525178}
   - component: {fileID: 247525181}
-  - component: {fileID: 247525182}
   m_Layer: 0
   m_Name: Object 1
   m_TagString: Untagged
@@ -348,23 +347,13 @@ MonoBehaviour:
   initialColor: 0
   monochromeMaterial: {fileID: 2100000, guid: 02935f78dd3e9e545826ddd93c06bd19, type: 2}
   moveAxis: 2
-  moveSpeed: 5
+  gridCellSize: 1
+  moveDuration: 0.12
   checkDistance: 1
+  movementBlockMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   objectID: 0
---- !u!114 &247525182
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 247525177}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0b7fde700b510440b1d7dc821d18135, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RotationCalculator
-  SunLight: {fileID: 579596240}
-  speed: 1
 --- !u!1 &303729892 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 807893b08959e8045a7bac4976654ac6, type: 3}
@@ -560,7 +549,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &366203409
 Transform:
   m_ObjectHideFlags: 0
@@ -648,6 +637,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 404d6fb121b60884bbf1e4b30987ebb3, type: 3}
       propertyPath: m_Name
       value: tree-pine-small
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 404d6fb121b60884bbf1e4b30987ebb3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -812,7 +805,7 @@ Transform:
   m_GameObject: {fileID: 725665869}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.4522705, y: 0.65869, z: -0.44519043}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -834,8 +827,12 @@ MonoBehaviour:
   initialColor: 1
   monochromeMaterial: {fileID: 2100000, guid: 02935f78dd3e9e545826ddd93c06bd19, type: 2}
   moveAxis: 0
-  moveSpeed: 5
+  gridCellSize: 1
+  moveDuration: 0.12
   checkDistance: 1
+  movementBlockMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &749028486
 GameObject:
   m_ObjectHideFlags: 0
@@ -1142,6 +1139,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: hedge
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 2d6d03b8db875d04cb22739f9498416b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1276,6 +1277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1274719712}
   - component: {fileID: 1274719713}
+  - component: {fileID: 1274719714}
   m_Layer: 0
   m_Name: Level
   m_TagString: Untagged
@@ -1292,7 +1294,7 @@ Transform:
   m_GameObject: {fileID: 1274719711}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 903.3181, y: 0.00001, z: -642.88324}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1301,6 +1303,7 @@ Transform:
   - {fileID: 1958173880}
   - {fileID: 366203409}
   - {fileID: 850796738}
+  - {fileID: 1893313431}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1274719713
@@ -1315,6 +1318,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c47e2a4b52a6c094794190a17e810a07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelRoot
+--- !u!114 &1274719714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1274719711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5e1bf34b14bd6f40b8b7a20cffcd9c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GridShadowManager
+  cellSize: 1
+  gridOrigin: {x: 0, y: 0, z: 0}
+  showGrid: 1
+  gridExtentX: 10
+  gridExtentZ: 10
+  gridColor: {r: 0.8235295, g: 0.4117647, b: 0.1176471, a: 1}
+  originColor: {r: 1, g: 0.5, b: 0, a: 0.69411767}
+  shadowHighlight: {r: 0.2, g: 0.2, b: 0.2, a: 0.6117647}
+  showCoordinates: 0
+  mainLight: {fileID: 579596240}
+  manualLightDir: {x: 0, y: 0, z: 0}
+  shadowLength: 2
 --- !u!1 &1291580846
 GameObject:
   m_ObjectHideFlags: 3
@@ -1465,27 +1492,27 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 6cb39b7eed6dc014c8d624ca7569971b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cb39b7eed6dc014c8d624ca7569971b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cb39b7eed6dc014c8d624ca7569971b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cb39b7eed6dc014c8d624ca7569971b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.4522705
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cb39b7eed6dc014c8d624ca7569971b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.692571
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cb39b7eed6dc014c8d624ca7569971b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.7839966
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cb39b7eed6dc014c8d624ca7569971b, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1640,6 +1667,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 9b0289ac2c31634469b37d2bdc13b74d, type: 3}
       propertyPath: m_Name
       value: tree
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 9b0289ac2c31634469b37d2bdc13b74d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1832,14 +1863,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1893313430}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 904.352, y: 0, z: -643.76}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.0338745, y: -0.00001, z: -0.87677}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 749028488}
   - {fileID: 778695280}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1274719712}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1893313432
 MonoBehaviour:
@@ -2002,7 +2033,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1958173880
 Transform:
   m_ObjectHideFlags: 0
@@ -2037,7 +2068,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 404d6fb121b60884bbf1e4b30987ebb3, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.157
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 404d6fb121b60884bbf1e4b30987ebb3, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2075,6 +2106,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: tree-pine-small
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 404d6fb121b60884bbf1e4b30987ebb3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2101,7 +2136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1974075739
 Transform:
   m_ObjectHideFlags: 0
@@ -2133,8 +2168,12 @@ MonoBehaviour:
   initialColor: 0
   monochromeMaterial: {fileID: 0}
   moveAxis: 2
-  moveSpeed: 5
+  gridCellSize: 1
+  moveDuration: 0.12
   checkDistance: 1
+  movementBlockMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1001 &1975946642
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2218,4 +2257,3 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1274719712}
-  - {fileID: 1893313431}

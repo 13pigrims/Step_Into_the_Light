@@ -8,6 +8,8 @@ public class LevelRoot : MonoBehaviour
     private ButtonManager buttonManager_root;
     private InputManager inputManager_root;
     public HistoryManager historyManager_root;
+    // 新增影子管理器（挂在当前GameObject上）
+    private GridShadowManager _shadowManager;
     // 各类物体状态
     private WorldState _worldState;
     private CharacterState _characterState;
@@ -33,6 +35,11 @@ public class LevelRoot : MonoBehaviour
         {
             Instance = this;
         }
+
+        // 获取影子管理器（与 LevelRoot 挂在同一个 GameObject 上）
+        _shadowManager = GetComponent<GridShadowManager>();
+        if (_shadowManager == null)
+            Debug.LogWarning("LevelRoot 上未找到 GridShadowManager，影子系统将不可用。");
 
         // 测试能否获取主相机
         Debug.Log($"MainCamera: {MainCamera}");
@@ -85,11 +92,7 @@ public class LevelRoot : MonoBehaviour
         // 订阅InputManager的OnPause事件
         inputManager_root.OnPause += HandleGameOver;
         // Debug.Log($"订阅InputManager的OnObjectSelected事件, InputManager: {inputManager_root}");
-        inputManager_root.OnMoveEnd += () =>
-        {
-            if (_objSelectedState != null)
-                historyManager_root.RecordState();
-        };
+        // 改为在移动动画结束时调用HistoryManager的RecordStep方法记录历史状态，先等HistoryManager构造完成再订阅事件
     }
 
     private void Start()
@@ -103,7 +106,9 @@ public class LevelRoot : MonoBehaviour
         // 当被选择物体不为空时，检测移动
         if (_objSelectedState != null)
         {
-            // Debug.Log($"当前选中物体: {_objSelectedState.gameObject.name}");
+            // 如果当前物体处在移动动画中，不进行更新
+            if (_objSelectedState.IsMoving) return;
+
             Vector3 movement = inputManager_root.OnMove();
             // Debug.Log($"movement: {movement}");
 
@@ -115,6 +120,8 @@ public class LevelRoot : MonoBehaviour
                     if (characterState.canMoveOn(movement))
                     {
                         characterState.Move(movement);
+                        // 动画结束后记录
+                        StartCoroutine(RecordAfterMove(characterState));
                     }
                 }
                 else if (_objSelectedState is ObjectState objState)
@@ -123,17 +130,32 @@ public class LevelRoot : MonoBehaviour
                     if (objState.canMoveOn(movement))
                     {
                         objState.Move(movement);
+                        StartCoroutine(RecordAfterMove(objState));
                     }
                 }
             }
         }
         // 检测是否按下撤回键
-        if (historyManager_root.IsUndoPressed())
+        if (historyManager_root != null && historyManager_root.IsUndoPressed())
         {
+            // 动画播放时不允许撤回
+            if (_objSelectedState != null && _objSelectedState.IsMoving) return;
+
             Debug.Log("撤回键被按下，执行撤回操作");
             historyManager_root.Undo();
         }
            
+    }
+    /// <summary>
+    /// 等待移动动画完成后记录状态的协程
+    /// </summary>
+    private System.Collections.IEnumerator RecordAfterMove(BaseState state)
+    {
+        // 等待动画播放完毕
+        yield return new WaitUntil(() => !state.IsMoving);
+        // 动画结束，position 已到位，记录快照
+        if (historyManager_root != null)
+            historyManager_root.RecordState();
     }
 
     private void HandleObjectSelected(BaseState state)

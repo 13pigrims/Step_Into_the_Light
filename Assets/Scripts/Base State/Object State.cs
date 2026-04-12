@@ -8,6 +8,8 @@ public class ObjectState : BaseState
     protected override void Awake()
     {
         base.Awake();
+        // 启动时初始化到网格
+        SnapToGrid();
         // 开发状态下测试当前场景是否出现重复ID。发布时剔除
 #if UNITY_EDITOR
         // 寻找全局的ObejctState
@@ -31,6 +33,8 @@ public class ObjectState : BaseState
             {
                 CurrentColor.SetState(objSnapshot.color);
                 _currentTransform.position = objSnapshot.position;
+                // 撤销后停止动画状态
+                IsMoving = false;
                 break;
             }
         }
@@ -52,10 +56,24 @@ public class ObjectState : BaseState
 
     public override bool canMoveOn(Vector3 movement)
     {
-        if (Physics.Raycast(_currentTransform.position, movement.normalized, out RaycastHit hit, checkDistance))
+        // 【改动】动画播放中不允许再次移动
+        if (IsMoving) return false;
+
+        // 前方检测一格距离（使用 movementBlockMask 排除 Button 层）
+        Vector3 dir = NormalizeToCardinal(movement);
+        // 检查目标格子是否有影子 → 不能移动
+        var shadowMgr = GridShadowManager.Instance;
+        if (shadowMgr != null)
         {
-            if (hit.collider.CompareTag("Shadow"))
-                return false; // 碰到影子，不移动但不Game Over
+            Vector3 targetWorldPos = _currentTransform.position + dir * gridCellSize;
+            Vector2Int targetCell = shadowMgr.WorldToGrid(targetWorldPos);
+            if (shadowMgr.HasShadow(targetCell))
+                return false;
+        }
+
+        // 前方检测墙壁和物体（射线检测，排除 Button 层和 Shadow 层）
+        if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask))
+        {
             if (hit.collider.CompareTag("Wall") || hit.collider.CompareTag("Object"))
                 return false;
         }
@@ -64,21 +82,12 @@ public class ObjectState : BaseState
 
     public override void Move(Vector3 movement)
     {
-        Vector3 filteredMovement = moveAxis switch
-        {
-            MoveAxis.Horizontal => new Vector3(movement.x, 0, 0),
-            MoveAxis.Vertical => new Vector3(0, 0, movement.z),
-            MoveAxis.All => movement,
-            _ => Vector3.zero
-        };
-
-        _currentTransform.position += filteredMovement * moveSpeed * Time.deltaTime;
-        // 更新currentTransform
-        _currentTransform = transform;
         if (movement.sqrMagnitude > 0.01f)
         {
             GameRoot.GetInstance().AudioManager_Root.PlaySFX(GameRoot.GetInstance().MoveClip);
         }
+        // 调用基类的栅格移动（带动画）
+        base.Move(movement);
     }
 
 }

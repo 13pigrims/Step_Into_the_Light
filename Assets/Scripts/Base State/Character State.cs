@@ -11,15 +11,22 @@ public class CharacterState : BaseState
     {
         CurrentColor.SetState(lastSnapshot.characterColor);
         _currentTransform.position = lastSnapshot.characterPosition;
+        // 撤销后停止动画状态
+        IsMoving = false;
     }
 
     public override bool canMoveOn(Vector3 movement)
     {
-        // 脚部的射线检测
-        Vector3 feetPos = _currentTransform.position + Vector3.up * 0.1f;
-        if (Physics.Raycast(feetPos, Vector3.down, out RaycastHit shadowHit, 0.5f))
+        // 动画播放中不允许再次移动
+        if (IsMoving) return false;
+        // 新增网格管理器实例
+        var shadowMgr = GridShadowManager.Instance;
+
+        // 检查当前脚下是否站在影子上 → Game Over
+        if (shadowMgr != null)
         {
-            if (shadowHit.collider.CompareTag("Shadow"))
+            Vector2Int currentCell = shadowMgr.WorldToGrid(_currentTransform.position);
+            if (shadowMgr.HasShadow(currentCell))
             {
                 if (!_isGameOver)
                 {
@@ -28,21 +35,36 @@ public class CharacterState : BaseState
                 }
                 return false;
             }
-            if (shadowHit.collider.CompareTag("Wall") || shadowHit.collider.CompareTag("Object"))
+        }
+
+        // 检查目标格子是否有影子 → 不能走
+        Vector3 dir = NormalizeToCardinal(movement);
+        if (shadowMgr != null)
+        {
+            Vector3 targetWorldPos = _currentTransform.position + dir * gridCellSize;
+            Vector2Int targetCell = shadowMgr.WorldToGrid(targetWorldPos);
+            if (shadowMgr.HasShadow(targetCell))
                 return false;
         }
+
+        // 前方检测墙壁和物体（射线检测，排除 Button 层和 Shadow 层）
+        if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask))
+        {
+            if (hit.collider.CompareTag("Wall") || hit.collider.CompareTag("Object"))
+                return false;
+        }
+
         return true;
     }
 
     public override void Move(Vector3 movement)
     {
-        _currentTransform.position += movement * moveSpeed * Time.deltaTime;
-        _currentTransform = transform;
         // 播放移动音效，只有当角色实际移动时才播放
         if (movement.sqrMagnitude > 0.01f)
         {
             GameRoot.GetInstance().AudioManager_Root.PlaySFX(GameRoot.GetInstance().MoveClip);
         }
+        base.Move(movement);
     }
 
     public override void Initialize(ButtonManager buttonManager)
@@ -65,6 +87,7 @@ public class CharacterState : BaseState
     protected override void Awake()
     {
         base.Awake();
+        SnapToGrid();
     }
 
     public override void HandleButtonPressed()
