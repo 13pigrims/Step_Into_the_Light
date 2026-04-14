@@ -2,6 +2,7 @@ using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameOverPanel : BasePanel
 {
@@ -59,10 +60,10 @@ public class GameOverPanel : BasePanel
     private void Restart()
     {
         Debug.Log("Restart Button Clicked!");
-        // 在这里添加点击Restart按钮后的逻辑，例如，弹出栈内所有元素并重新加载当前关卡等
         GameRoot.GetInstance().UIManager_Root.PopPanel(true);
-        Scene2 scene2 = new Scene2();
-        GameRoot.GetInstance().SceneControl_Root.LoadScene(scene2.scene_name, scene2);
+        // 直接重新加载当前场景，不管是第几关
+        string currentScene = SceneManager.GetActiveScene().name;
+        SceneManager.LoadScene(currentScene);
     }
     /// <summary>
     /// 触发Back To Menu按钮点击事件的方法

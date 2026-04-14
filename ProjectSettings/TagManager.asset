@@ -7,8 +7,11 @@ TagManager:
   - PickUp
   - Blocks
   - SensorCam
-  - Walls
   - Shadow
+  - Object
+  - Wall
+  - Floor
+  - Button
   layers:
   - Default
   - TransparentFX
@@ -21,7 +24,7 @@ TagManager:
   - Wall
   - Button
   - Shadow
-  - 
+  - Object
   - 
   - 
   - 

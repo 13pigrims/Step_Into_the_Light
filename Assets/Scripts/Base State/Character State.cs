@@ -17,37 +17,20 @@ public class CharacterState : BaseState
 
     public override bool canMoveOn(Vector3 movement)
     {
-        // 动画播放中不允许再次移动
         if (IsMoving) return false;
-        // 新增网格管理器实例
-        var shadowMgr = GridShadowManager.Instance;
 
-        // 检查当前脚下是否站在影子上 → Game Over
-        if (shadowMgr != null)
-        {
-            Vector2Int currentCell = shadowMgr.WorldToGrid(_currentTransform.position);
-            if (shadowMgr.HasShadow(currentCell))
-            {
-                if (!_isGameOver)
-                {
-                    _isGameOver = true;
-                    GameRoot.GetInstance().UIManager_Root.PushPanel(new GameOverPanel());
-                }
-                return false;
-            }
-        }
-
-        // 检查目标格子是否有影子 → 不能走
         Vector3 dir = NormalizeToCardinal(movement);
-        if (shadowMgr != null)
+        Vector3 targetPos = _currentTransform.position + dir * gridCellSize;
+
+        // 目标格子没有地面 → Game Over
+        if (!HasGroundAt(targetPos))
         {
-            Vector3 targetWorldPos = _currentTransform.position + dir * gridCellSize;
-            Vector2Int targetCell = shadowMgr.WorldToGrid(targetWorldPos);
-            if (shadowMgr.HasShadow(targetCell))
+            // 目标格子没有地面 → 不允许移动（不触发 Game Over）
+            if (!HasGroundAt(targetPos))
                 return false;
         }
 
-        // 前方检测墙壁和物体（射线检测，排除 Button 层和 Shadow 层）
+        // 前方检测：只挡墙壁和物体，角色可以走进影子
         if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask))
         {
             if (hit.collider.CompareTag("Wall") || hit.collider.CompareTag("Object"))
@@ -57,13 +40,36 @@ public class CharacterState : BaseState
         return true;
     }
 
+    /// <summary>
+    /// 每帧检测脚下是否站在影子上，独立于输入
+    /// 角色走进影子后立刻触发死亡，不需要再按键
+    /// </summary>
+    private void Update()
+    {
+        if (IsMoving || _isGameOver) return;
+
+        // 从角色位置略上方向下发射射线，距离要足够到达地面
+        Vector3 feetPos = _currentTransform.position + Vector3.up * 0.1f;
+        float rayDistance = feetPos.y + 0.5f; // 确保射线能到达 Y=0 以下
+        if (Physics.Raycast(feetPos, Vector3.down, out RaycastHit hit, rayDistance, movementBlockMask))
+        {
+            if (hit.collider.CompareTag("Shadow"))
+            {
+                _isGameOver = true;
+                Debug.Log("Game Over: Stepped on a shadow!");
+                GameRoot.GetInstance().UIManager_Root.PushPanel(new GameOverPanel());
+            }
+        }
+    }
+
     public override void Move(Vector3 movement)
     {
-        // 播放移动音效，只有当角色实际移动时才播放
+        // 播放移动音效
         if (movement.sqrMagnitude > 0.01f)
         {
             GameRoot.GetInstance().AudioManager_Root.PlaySFX(GameRoot.GetInstance().MoveClip);
         }
+        // 调用基类的栅格移动（带动画）
         base.Move(movement);
     }
 
@@ -81,12 +87,13 @@ public class CharacterState : BaseState
 
     public override bool IsInteractive()
     {
-        return true; // 角色永远可交互
+        return true;
     }
 
     protected override void Awake()
     {
         base.Awake();
+        // 启动时对齐到网格
         SnapToGrid();
     }
 
@@ -99,9 +106,7 @@ public class CharacterState : BaseState
     {
         ExchangeColor();
     }
-    /// <summary>
-    /// 用于触发游戏结束面板
-    /// </summary>
+
     private void TriggerGameOver()
     {
         OnGameOver?.Invoke();

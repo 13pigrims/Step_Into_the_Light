@@ -18,8 +18,10 @@ public class GameRoot : MonoBehaviour
     [SerializeField] private AudioClip bgmClip;
     [SerializeField] private AudioClip clickClip;
     [SerializeField] private AudioClip moveClip;
+    [SerializeField] private AudioClip winClip;
     public AudioClip ClickClip => clickClip;
     public AudioClip MoveClip => moveClip;
+    public AudioClip WinClip => winClip;
 
     public static GameRoot GetInstance()
     {
@@ -60,6 +62,13 @@ public class GameRoot : MonoBehaviour
         DontDestroyOnLoad(this);
         DontDestroyOnLoad(EventSystem);
         UIManager_Root.CanvasObj = UIMethod.GetInstance().FindCanvas();
+        // 测试，加载新场景时自动销毁多余的 EventSystem
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (scene, mode) =>
+        {
+            var systems = FindObjectsByType<UnityEngine.EventSystems.EventSystem>(FindObjectsSortMode.None);
+            for (int i = 1; i < systems.Length; i++)
+                Destroy(systems[i].gameObject);
+        };
         // 初始化场景控制器，加载初始场景
         Scene1 scene1 = new Scene1();
         SceneControl_Root.dict_scene.Add(scene1.scene_name, scene1);

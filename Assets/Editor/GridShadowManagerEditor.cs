@@ -53,7 +53,7 @@ public class GridShadowManagerEditor : Editor
     }
 
     /// <summary>
-    /// 将场景中所有 BaseState 物体的位置对齐到最近的网格点
+    /// 将场景中所有 BaseState 物体的位置对齐到最近的格子中心
     /// </summary>
     private void SnapAllToGrid(GridShadowManager mgr)
     {
@@ -68,8 +68,8 @@ public class GridShadowManagerEditor : Editor
             Vector3 origin = mgr.gridOrigin;
             float cell = mgr.cellSize;
 
-            pos.x = Mathf.Round((pos.x - origin.x) / cell) * cell + origin.x;
-            pos.z = Mathf.Round((pos.z - origin.z) / cell) * cell + origin.z;
+            pos.x = (Mathf.Floor((pos.x - origin.x) / cell) + 0.5f) * cell + origin.x;
+            pos.z = (Mathf.Floor((pos.z - origin.z) / cell) + 0.5f) * cell + origin.z;
 
             if (state.transform.position != pos)
             {
@@ -116,8 +116,8 @@ public static class GridSnapTools
             Vector3 origin = mgr.gridOrigin;
             float cell = mgr.cellSize;
 
-            pos.x = Mathf.Round((pos.x - origin.x) / cell) * cell + origin.x;
-            pos.z = Mathf.Round((pos.z - origin.z) / cell) * cell + origin.z;
+            pos.x = (Mathf.Floor((pos.x - origin.x) / cell) + 0.5f) * cell + origin.x;
+            pos.z = (Mathf.Floor((pos.z - origin.z) / cell) + 0.5f) * cell + origin.z;
 
             if (go.transform.position != pos)
             {

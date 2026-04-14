@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class GameStateSnapshot
 {
-    // 世界颜色
-    public ColorType.State worldColor;
+    // 多个世界状态的快照
+    public WorldSnapshot[] worldSnapshots;
 
     // 角色颜色和位置
     public ColorType.State characterColor;
@@ -12,29 +12,45 @@ public class GameStateSnapshot
     // 所有物体的状态快照
     public ObjectSnapshot[] objectSnapshots;
 
-    public GameStateSnapshot(WorldState worldState, CharacterState characterState, ObjectState[] objectStates)
-    {
-        // Debug用
-        Debug.Log($"characterState: {characterState}");
-        Debug.Log($"characterState.GetColor().GetState(): {characterState?.GetColor().GetState()}");
-        Debug.Log($"characterState.GetTransform().position: {characterState?.GetTransform().position}");
-        Debug.Log($" objectStates[0]: {objectStates[0]}");
-        Debug.Log($"worldState: {worldState}");
-        Debug.Log($"objectStates[0].GetTransform().position: {(objectStates[0] != null ? objectStates[0].GetTransform().position.ToString() : "null")}");
-        Debug.Log($"objectStates[0].GetColor().GetState(): {(objectStates[0] != null ? objectStates[0].GetColor().GetState().ToString() : "null")}");
-        Debug.Log($"worldState.GetColor().GetState(): {worldState?.GetColor().GetState()}");
+    // 所有同步世界物体的状态快照
+    public SyncObjSnapshot[] syncObjSnapshots;
 
-        worldColor = worldState.GetColor().GetState();
+    public GameStateSnapshot(WorldState[] worldStates, CharacterState characterState, ObjectState[] objectStates, SyncWorldObjState[] syncObjStates)
+    {
+        // 记录所有 WorldState
+        worldSnapshots = new WorldSnapshot[worldStates.Length];
+        for (int i = 0; i < worldStates.Length; i++)
+        {
+            worldSnapshots[i] = new WorldSnapshot(
+                worldStates[i].worldID,
+                worldStates[i].GetColor().GetState()
+            );
+        }
+
+        // 记录角色
         characterColor = characterState.GetColor().GetState();
         characterPosition = characterState.GetTransform().position;
-        // 根据objectStates内的个数顶objectSnapshots的长度
+
+        // 记录所有物体
         objectSnapshots = new ObjectSnapshot[objectStates.Length];
         for (int i = 0; i < objectStates.Length; i++)
         {
             objectSnapshots[i] = new ObjectSnapshot(
-            objectStates[i].objectID,
-            objectStates[i].GetColor().GetState(),
-            objectStates[i].GetTransform().position);
+                objectStates[i].objectID,
+                objectStates[i].GetColor().GetState(),
+                objectStates[i].GetTransform().position
+            );
+        }
+
+        // 记录所有同步世界物体
+        syncObjSnapshots = new SyncObjSnapshot[syncObjStates.Length];
+        for (int i = 0; i < syncObjStates.Length; i++)
+        {
+            syncObjSnapshots[i] = new SyncObjSnapshot(
+                syncObjStates[i].syncObjID,
+                syncObjStates[i].GetColor().GetState(),
+                syncObjStates[i].GetTransform().position
+            );
         }
     }
 }

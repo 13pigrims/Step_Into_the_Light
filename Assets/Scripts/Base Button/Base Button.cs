@@ -60,7 +60,7 @@ public abstract class BaseButton : MonoBehaviour
         {
             if (col.CompareTag("Shadow"))
             {
-                Debug.Log($"ObeliskButton {name} is covered by ShadowCollider {col.name}, state change triggered.");
+               // Debug.Log($"ObeliskButton {name} is covered by ShadowCollider {col.name}, state change triggered.");
                 return true;
             }
         }

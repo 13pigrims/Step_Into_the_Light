@@ -18,6 +18,10 @@ public class GridShadowCaster : MonoBehaviour
     [Tooltip("影子物体所在的 Layer（建议设为 Shadow 层，避免干扰移动射线）")]
     public int shadowLayer = 0;
 
+    [Header("地面检测")]
+    [Tooltip("地面所在的 Layer，影子只会出现在有地面的格子上")]
+    public LayerMask groundMask = ~0;
+
     [Header("调试")]
     [Tooltip("在 Scene 视图中显示影子格子")]
     public bool showGizmos = true;
@@ -34,6 +38,9 @@ public class GridShadowCaster : MonoBehaviour
     // 缓存引用
     private GridShadowManager _manager;
 
+    // 影子容器（场景根级别，不受物体 Scale 影响）
+    private Transform _shadowContainer;
+
     private void Start()
     {
         _manager = GridShadowManager.Instance;
@@ -44,10 +51,11 @@ public class GridShadowCaster : MonoBehaviour
             return;
         }
 
-        // 注册到管理器
-        _manager.RegisterCaster(this);
+        // 创建一个独立的影子容器，不跟随物体的 Scale/Rotation
+        _shadowContainer = new GameObject($"{name}_Shadows").transform;
+        _shadowContainer.SetParent(null); // 放在场景根级别
 
-        // 初始计算
+        _manager.RegisterCaster(this);
         _lastGridPos = _manager.WorldToGrid(transform.position);
         RecalculateShadow();
     }
@@ -60,6 +68,7 @@ public class GridShadowCaster : MonoBehaviour
         {
             _lastGridPos = currentGridPos;
             RecalculateShadow();
+            Debug.Log($"{name} moved to new grid cell {currentGridPos}, recalculating shadow.");
         }
     }
 
@@ -75,15 +84,30 @@ public class GridShadowCaster : MonoBehaviour
 
         // 2. 计算新的影子格子
         Vector2Int gridPos = _manager.WorldToGrid(transform.position);
-        _currentShadowCells = _manager.CalcShadowCells(gridPos);
+        var allCells = _manager.CalcShadowCells(gridPos);
 
-        // 3. 在管理器中标记占用
+        // 3. 过滤：只保留下方有地面的格子
+        _currentShadowCells = new System.Collections.Generic.List<Vector2Int>();
+        foreach (var cell in allCells)
+        {
+            Vector3 worldPos = _manager.GridToWorld(cell, 0f);
+            bool hasGround = Physics.Raycast(
+                worldPos + Vector3.up * 5f,
+                Vector3.down,
+                10f,
+                groundMask
+            );
+            if (hasGround)
+                _currentShadowCells.Add(cell);
+        }
+
+        // 4. 在管理器中标记占用（只标记有地面的）
         foreach (var cell in _currentShadowCells)
         {
             _manager.MarkShadowCell(cell, this);
         }
 
-        // 4. 更新视觉和碰撞体
+        // 5. 更新视觉和碰撞体
         UpdateShadowObjects();
     }
 
@@ -100,7 +124,7 @@ public class GridShadowCaster : MonoBehaviour
             _shadowObjects.Add(CreateShadowCell(cellSize));
         }
 
-        // 启用需要的，定位到正确位置
+        // 启用需要的，定位到正确位置（已经过滤掉无地面的格子）
         for (int i = 0; i < _currentShadowCells.Count; i++)
         {
             var obj = _shadowObjects[i];
@@ -124,7 +148,7 @@ public class GridShadowCaster : MonoBehaviour
     private GameObject CreateShadowCell(float cellSize)
     {
         var obj = new GameObject($"{name}_Shadow_{_shadowObjects.Count}");
-        obj.transform.SetParent(transform); // 跟随父物体层级，方便管理
+        obj.transform.SetParent(_shadowContainer); // 放在独立容器下，不受物体 Scale 影响
         obj.tag = "Shadow";
         obj.layer = shadowLayer;
 
@@ -148,11 +172,11 @@ public class GridShadowCaster : MonoBehaviour
             meshRenderer.sharedMaterial = mat;
         }
 
-        // 碰撞体：BoxCollider，用于按钮的 OverlapBox 检测
+        // 碰撞体：Trigger BoxCollider，角色走进去时触发 OnTriggerEnter
         var collider = obj.AddComponent<BoxCollider>();
-        collider.size = new Vector3(1f, 0.1f, 1f); // 薄片状
-        collider.center = Vector3.zero;
-        // 不设为 Trigger，保持实体碰撞（与原 ShadowProjector 一致）
+        collider.size = new Vector3(0.9f, 0.5f, 0.9f);
+        collider.center = new Vector3(0f, 0.25f, 0f);
+        collider.isTrigger = true;
 
         return obj;
     }
@@ -185,12 +209,10 @@ public class GridShadowCaster : MonoBehaviour
         if (_manager != null)
             _manager.UnregisterCaster(this);
 
-        // 销毁影子对象
-        foreach (var obj in _shadowObjects)
-        {
-            if (obj != null)
-                Destroy(obj);
-        }
+        // 销毁整个影子容器（包括所有影子对象）
+        if (_shadowContainer != null)
+            Destroy(_shadowContainer.gameObject);
+
         _shadowObjects.Clear();
     }
 

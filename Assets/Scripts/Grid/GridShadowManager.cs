@@ -119,13 +119,14 @@ public class GridShadowManager : MonoBehaviour
 
     /// <summary>
     /// 将3D光方向量化为2D网格偏移方向
-    /// 光的XZ分量取反（影子朝光的反方向延伸），量化为 -1/0/1
+    /// Unity Directional Light 的 forward = 光线行进方向
+    /// 影子顺着光线方向延伸（光从左上来，forward 指向右下，影子也在右下）
     /// </summary>
     private Vector2Int QuantizeLightToGridDir(Vector3 lightDir)
     {
-        // 取XZ平面分量，影子朝光的反方向
-        float sx = -lightDir.x;
-        float sz = -lightDir.z;
+        // 直接取 XZ 分量，影子顺着光线方向延伸
+        float sx = lightDir.x;
+        float sz = lightDir.z;
 
         // 如果XZ分量都很小（正顶光），影子不延伸
         if (Mathf.Abs(sx) < 0.01f && Mathf.Abs(sz) < 0.01f)
@@ -185,6 +186,18 @@ public class GridShadowManager : MonoBehaviour
         return _shadowMap.ContainsKey(gridPos) && _shadowMap[gridPos].Count > 0;
     }
 
+    /// <summary>查询某格是否有来自其他投射器的影子（排除指定投射器自身的影子）</summary>
+    public bool HasShadowExcluding(Vector2Int gridPos, GridShadowCaster excludeCaster)
+    {
+        if (!_shadowMap.ContainsKey(gridPos)) return false;
+        var casters = _shadowMap[gridPos];
+        foreach (var c in casters)
+        {
+            if (c != excludeCaster) return true; // 有来自别的物体的影子
+        }
+        return false; // 只有自己的影子，不算
+    }
+
     /// <summary>重算所有影子（光源方向变化时调用）</summary>
     public void RecalculateAllShadows()
     {
@@ -196,23 +209,23 @@ public class GridShadowManager : MonoBehaviour
 
     // ========== 坐标工具 ==========
 
-    /// <summary>世界坐标 → 网格坐标</summary>
+    /// <summary>世界坐标 → 网格坐标（物体在哪个格子里）</summary>
     public Vector2Int WorldToGrid(Vector3 worldPos)
     {
         Vector3 local = worldPos - gridOrigin;
         return new Vector2Int(
-            Mathf.RoundToInt(local.x / cellSize),
-            Mathf.RoundToInt(local.z / cellSize)
+            Mathf.FloorToInt(local.x / cellSize),
+            Mathf.FloorToInt(local.z / cellSize)
         );
     }
 
-    /// <summary>网格坐标 → 世界坐标（地面中心）</summary>
+    /// <summary>网格坐标 → 世界坐标（格子中心）</summary>
     public Vector3 GridToWorld(Vector2Int gridPos, float groundY = 0f)
     {
         return gridOrigin + new Vector3(
-            gridPos.x * cellSize,
+            (gridPos.x + 0.5f) * cellSize,
             groundY,
-            gridPos.y * cellSize
+            (gridPos.y + 0.5f) * cellSize
         );
     }
 

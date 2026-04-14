@@ -40,6 +40,9 @@ public class StartPanel : BasePanel
     {
         Debug.Log("Start Button Clicked!");
         // 在这里添加点击Start按钮后的逻辑，例如，切换到游戏主界面等
+        GameRoot.GetInstance().UIManager_Root.PopPanel(false);
+        ChaptersPanel chaptersPanel = new ChaptersPanel();
+        GameRoot.GetInstance().UIManager_Root.PushPanel(chaptersPanel);
     }
     /// <summary>
     /// 触发Exit按钮点击事件的方法
@@ -66,7 +69,6 @@ public class StartPanel : BasePanel
     { 
         Debug.Log("Load Button Clicked!");
         // 在这里添加点击Load按钮后的逻辑，例如，加载场景等
-        Scene2 scene2 = new Scene2();
-        GameRoot.GetInstance().SceneControl_Root.LoadScene("Scene2", scene2);
+        // 这里用于保存玩家进度和加载游戏
     }
 }
