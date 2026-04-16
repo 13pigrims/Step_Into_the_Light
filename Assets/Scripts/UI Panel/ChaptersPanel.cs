@@ -52,8 +52,8 @@ public class ChaptersPanel : BasePanel
     {
         Debug.Log("Enter Chapter One Button Clicked!");
         GameRoot.GetInstance().UIManager_Root.PopPanel(false);
-        ChapterShadowPanel chapterShadowPanel = new ChapterShadowPanel();
-        GameRoot.GetInstance().UIManager_Root.PushPanel(chapterShadowPanel);
+        ChapterOnePanel chapterOnePanel = new ChapterOnePanel();
+        GameRoot.GetInstance().UIManager_Root.PushPanel(chapterOnePanel);
         /// 在这里添加点击进入第一章按钮后的逻辑，例如，切换到第一章的游戏界面等
 
     }
@@ -61,8 +61,12 @@ public class ChaptersPanel : BasePanel
     /// 触发第二章按钮点击事件的方法
     /// </summary>
     private void EnterChapterTwo()
-    { 
-
+    {
+        Debug.Log("Enter Chapter Two Button Clicked!");
+        GameRoot.GetInstance().UIManager_Root.PopPanel(false);
+        ChapterTwoPanel chapterTwoPanel = new ChapterTwoPanel();
+        GameRoot.GetInstance().UIManager_Root.PushPanel(chapterTwoPanel);
+        /// 在这里添加点击进入第二章按钮后的逻辑，例如，切换到第二章的游戏界面等
     }
     /// <summary>
     /// 触发进入第三章按钮点击事件的方法

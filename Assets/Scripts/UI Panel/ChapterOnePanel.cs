@@ -2,13 +2,13 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ChapterShadowPanel : BasePanel
+public class ChapterOnePanel : BasePanel
 {   
-    public static string name = "ChaptersPanel";
-    public static string path = "Panel/ChapterShadowPanel";
+    public static string name = "ChapterOnePanel";
+    public static string path = "Panel/ChapterOnePanel";
     public static readonly UIType uIType = new UIType(name, path);
 
-    public ChapterShadowPanel() : base(uIType)
+    public ChapterOnePanel() : base(uIType)
     {
     }
 
