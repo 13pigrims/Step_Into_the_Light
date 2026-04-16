@@ -19,6 +19,7 @@ public class LevelRoot : MonoBehaviour
     // 当前选中对象
     private BaseState _objSelectedState;
     public Camera MainCamera { get => Camera.main; }
+    public WorldState[] WorldStates => _worldStates;
 
     public static LevelRoot GetInstance()
     {

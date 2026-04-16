@@ -564,7 +564,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 000cab2e0f2ab2f45bed9cc67a1cf029, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameRoot
-  bgmClip: {fileID: 8300000, guid: b7ba50efbd7efd6419bb87eb425e7c27, type: 3}
+  bgmClip: {fileID: 8300000, guid: ee38cc6c770d22d4c90c2a744d5097e0, type: 3}
   clickClip: {fileID: 8300000, guid: 2e3118cd9c1888b49abfb8f1152146f6, type: 3}
   moveClip: {fileID: 8300000, guid: b1e75d18c2c99b54db0e23390994ab81, type: 3}
   winClip: {fileID: 8300000, guid: 186882c2e3818bd4b931fc25a7bee9f7, type: 3}

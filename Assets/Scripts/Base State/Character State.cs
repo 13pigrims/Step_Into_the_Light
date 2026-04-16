@@ -31,7 +31,7 @@ public class CharacterState : BaseState
         }
 
         // 前方检测：只挡墙壁和物体，角色可以走进影子
-        if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask))
+        if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask, QueryTriggerInteraction.Ignore))
         {
             if (hit.collider.CompareTag("Wall") || hit.collider.CompareTag("Object"))
                 return false;

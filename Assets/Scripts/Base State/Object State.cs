@@ -52,22 +52,27 @@ public class ObjectState : BaseState
 
     public override bool canMoveOn(Vector3 movement)
     {
-        if (IsMoving) return false;
+        if (IsMoving) { return false; }
 
         Vector3 dir = NormalizeToCardinal(movement);
         Vector3 targetPos = _currentTransform.position + dir * gridCellSize;
 
-        // 目标格子没有地面 → Game Over
-        // 目标格子没有地面 → 不允许移动（不触发 Game Over）
-        if (!HasGroundAt(targetPos))
-            return false;
+     // Debug.Log($"[{name}] 尝试移动方向={dir}, 目标={targetPos}");
 
-        // 前方检测：墙壁、物体、按钮
-        if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask))
+        if (!HasGroundAt(targetPos))
         {
+            Debug.Log($"[{name}] 被拦：目标没有地面");
+            return false;
+        }
+
+        if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask, QueryTriggerInteraction.Ignore))
+        {
+        //  Debug.Log($"[{name}] 射线命中: {hit.collider.gameObject.name}, Tag={hit.collider.tag}, isTrigger={hit.collider.isTrigger}");
             if (hit.collider.CompareTag("Wall") || hit.collider.CompareTag("Object") || hit.collider.CompareTag("Button"))
                 return false;
         }
+
+     // Debug.Log($"[{name}] 可以移动！");
         return true;
     }
 

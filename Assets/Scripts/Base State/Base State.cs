@@ -87,7 +87,8 @@ public abstract class BaseState : MonoBehaviour
             targetPos + Vector3.up * 5f,
             Vector3.down,
             10f,
-            groundCheckMask
+            groundCheckMask,
+            QueryTriggerInteraction.Ignore
         );
         return hasGround;
     }
