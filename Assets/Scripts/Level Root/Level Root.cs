@@ -114,6 +114,15 @@ public class LevelRoot : MonoBehaviour
         {
             if (_objSelectedState.IsMoving) return;
 
+            // 每帧重新检查选中物体是否仍然可交互
+            // 颜色变化后如果不再是同色，立即取消选中
+            if (!(_objSelectedState is CharacterState) && !_objSelectedState.IsInteractive())
+            {
+                Debug.Log($"[LevelRoot] {_objSelectedState.name} 不再可交互，取消选中");
+                _objSelectedState = null;
+                return;
+            }
+
             Vector3 movement = inputManager_root.OnMove();
 
             if (movement != Vector3.zero)

@@ -8,7 +8,6 @@ public class ObjectState : BaseState
     protected override void Awake()
     {
         base.Awake();
-        // 启动时对齐到网格
         SnapToGrid();
 
 #if UNITY_EDITOR
@@ -31,7 +30,6 @@ public class ObjectState : BaseState
             {
                 CurrentColor.SetState(objSnapshot.color);
                 _currentTransform.position = objSnapshot.position;
-                // 撤销后停止动画状态
                 IsMoving = false;
                 break;
             }
@@ -52,27 +50,30 @@ public class ObjectState : BaseState
 
     public override bool canMoveOn(Vector3 movement)
     {
-        if (IsMoving) { return false; }
+        if (IsMoving) return false;
 
         Vector3 dir = NormalizeToCardinal(movement);
         Vector3 targetPos = _currentTransform.position + dir * gridCellSize;
 
-     // Debug.Log($"[{name}] 尝试移动方向={dir}, 目标={targetPos}");
-
         if (!HasGroundAt(targetPos))
-        {
-            Debug.Log($"[{name}] 被拦：目标没有地面");
             return false;
+
+        // 检查目标格子是否有角色 → 不能推进角色身上
+        if (_characterState != null)
+        {
+            float dist = Vector3.Distance(
+                new Vector3(targetPos.x, 0, targetPos.z),
+                new Vector3(_characterState.GetTransform().position.x, 0, _characterState.GetTransform().position.z)
+            );
+            if (dist < gridCellSize * 0.5f)
+                return false;
         }
 
         if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask, QueryTriggerInteraction.Ignore))
         {
-        //  Debug.Log($"[{name}] 射线命中: {hit.collider.gameObject.name}, Tag={hit.collider.tag}, isTrigger={hit.collider.isTrigger}");
             if (hit.collider.CompareTag("Wall") || hit.collider.CompareTag("Object") || hit.collider.CompareTag("Button"))
                 return false;
         }
-
-     // Debug.Log($"[{name}] 可以移动！");
         return true;
     }
 
@@ -82,7 +83,6 @@ public class ObjectState : BaseState
         {
             GameRoot.GetInstance().AudioManager_Root.PlaySFX(GameRoot.GetInstance().MoveClip);
         }
-        // 调用基类的栅格移动（带动画）
         base.Move(movement);
     }
 }

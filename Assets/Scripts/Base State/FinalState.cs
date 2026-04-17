@@ -1,13 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UIElements;
 
-/// <summary>
-/// 通关物体：角色碰到后消失、播放胜利音效、弹出通关面板
-/// 层级结构：挂载 FinalState 的空物体 → 子物体 Prefab（视觉模型）
-/// 受 ObeliskButton 影响变色
-/// </summary>
 public class FinalState : BaseState
 {
     [Header("旋转动画")]
@@ -17,16 +11,15 @@ public class FinalState : BaseState
     [Tooltip("旋转一圈的时间（秒）")]
     [SerializeField] private float rotationPeriod = 5f;
 
-    // 子物体（视觉模型）
     private Transform _childModel;
-
-    // 是否已被收集
     private bool _isCollected = false;
+
+    // 记录当前在 Trigger 内的角色
+    private Collider _playerInside = null;
 
     protected override void Awake()
     {
         base.Awake();
-        // 让子物体的 Trigger 事件传递到这里
         var rb = gameObject.AddComponent<Rigidbody>();
         rb.isKinematic = true;
         rb.useGravity = false;
@@ -34,27 +27,29 @@ public class FinalState : BaseState
 
     private void Start()
     {
-        // 获取子物体（第一个子物体作为视觉模型）
         if (transform.childCount > 0)
         {
-            // 这里可以这样获取子物体吗？
             _childModel = transform.GetChild(0);
-            // 倾斜子物体
             _childModel.localRotation = Quaternion.Euler(tiltAngle, 0f, 0f);
-        }
-        else
-        {
-            Debug.LogWarning($"[FinalState] {name} 没有子物体，旋转动画将不生效。");
         }
     }
 
     private void Update()
     {
-        if (_isCollected || _childModel == null) return;
+        if (_isCollected) return;
 
-        // 顺时针旋转（绕 Y 轴，在倾斜的基础上叠加）
-        float degreesPerSecond = 360f / rotationPeriod;
-        _childModel.Rotate(Vector3.up, -degreesPerSecond * Time.deltaTime, Space.World);
+        // 旋转动画
+        if (_childModel != null)
+        {
+            float degreesPerSecond = 360f / rotationPeriod;
+            _childModel.Rotate(Vector3.up, -degreesPerSecond * Time.deltaTime, Space.World);
+        }
+
+        // 持续检测：玩家已经在 Trigger 内 + 颜色变为 Colored → 立即通关
+        if (_playerInside != null && CurrentColor.GetState() == ColorType.State.Colored)
+        {
+            TriggerWin();
+        }
     }
 
     // ========== ObeliskButton 变色 ==========
@@ -78,49 +73,50 @@ public class FinalState : BaseState
 
     // ========== 通关触发 ==========
 
-    /// <summary>
-    /// 角色进入 Trigger 区域时触发
-    /// 需要角色有 Collider + Rigidbody(Kinematic)，且 Tag 为 "Player"
-    /// </summary>
     private void OnTriggerEnter(Collider other)
     {
-        if (_isCollected) return;
+        if (_isCollected || !other.CompareTag("Player")) return;
+        _playerInside = other;
 
+        if (CurrentColor.GetState() == ColorType.State.Colored)
+            TriggerWin();
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
         if (other.CompareTag("Player"))
-        {
-            // Monochrome 状态下无法收集
-            if (CurrentColor.GetState() == ColorType.State.Monochrome)
-                return;
-            _isCollected = true;
-            Debug.Log($"[FinalState] 角色收集了 {name}，通关！");
-
-            // 播放胜利音效
-            var audio = GameRoot.GetInstance().AudioManager_Root;
-            var winClip = GameRoot.GetInstance().WinClip;
-            if (winClip != null && audio != null)
-                audio.PlaySFX(winClip);
-
-            // 隐藏子物体（表示已获取）
-            if (_childModel != null)
-                _childModel.gameObject.SetActive(false);
-
-            // 弹出通关面板
-            GameRoot.GetInstance().UIManager_Root.PushPanel(new WinPanel());
-        }
+            _playerInside = null;
     }
 
-    // ========== 撤销支持 ==========
-
-    public override void BackToPreviousState(GameStateSnapshot lastSnapshot)
+    private void OnTriggerStay(Collider other)
     {
-        // FinalState 不参与撤销（收集后不能撤销回来）
-        // 如果需要支持撤销，可以在这里加逻辑
+        if (_isCollected || !other.CompareTag("Player")) return;
+        _playerInside = other;
+
+        if (CurrentColor.GetState() == ColorType.State.Colored)
+            TriggerWin();
     }
 
-    public override bool IsInteractive()
+    private void TriggerWin()
     {
-        return false; // 不可被选中操作
+        if (_isCollected) return;
+        _isCollected = true;
+
+        Debug.Log($"[FinalState] 角色收集了 {name}，通关！");
+
+        var audio = GameRoot.GetInstance().AudioManager_Root;
+        var winClip = GameRoot.GetInstance().WinClip;
+        if (winClip != null && audio != null)
+            audio.PlaySFX(winClip);
+
+        if (_childModel != null)
+            _childModel.gameObject.SetActive(false);
+
+        GameRoot.GetInstance().UIManager_Root.PushPanel(new WinPanel());
     }
+
+    public override void BackToPreviousState(GameStateSnapshot lastSnapshot) { }
+    public override bool IsInteractive() { return false; }
 
     protected override void OnDestroy()
     {

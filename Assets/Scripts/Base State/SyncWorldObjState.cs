@@ -1,12 +1,6 @@
 using UnityEngine;
 using System;
 
-/// <summary>
-/// 同步世界状态的可交互物体：
-/// - 颜色受 ObeliskButton 控制（按下时切换颜色）
-/// - 交互性与 ObjectState 一致（与角色同色时可交互）
-/// - 可被玩家选中并移动
-/// </summary>
 public class SyncWorldObjState : BaseState
 {
     [SerializeField] public int syncObjID;
@@ -47,7 +41,7 @@ public class SyncWorldObjState : BaseState
         ExchangeColor();
     }
 
-    // ========== 交互性（与 ObjectState 一致） ==========
+    // ========== 交互性 ==========
 
     public override void InitializeInput(InputManager inputManager, CharacterState characterState)
     {
@@ -57,12 +51,11 @@ public class SyncWorldObjState : BaseState
 
     public override bool IsInteractive()
     {
-        // 与角色同色时可交互
         bool isSameColor = CurrentColor.GetState() == _characterState.GetColor().GetState();
         return isSameColor;
     }
 
-    // ========== 移动（与 ObjectState 一致） ==========
+    // ========== 移动 ==========
 
     public override bool canMoveOn(Vector3 movement)
     {
@@ -71,12 +64,21 @@ public class SyncWorldObjState : BaseState
         Vector3 dir = NormalizeToCardinal(movement);
         Vector3 targetPos = _currentTransform.position + dir * gridCellSize;
 
-        // 目标格子没有地面 → Game Over
-        // 目标格子没有地面 → 不允许移动（不触发 Game Over）
         if (!HasGroundAt(targetPos))
             return false;
 
-        if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask))
+        // 检查目标格子是否有角色 → 不能推进角色身上
+        if (_characterState != null)
+        {
+            float dist = Vector3.Distance(
+                new Vector3(targetPos.x, 0, targetPos.z),
+                new Vector3(_characterState.GetTransform().position.x, 0, _characterState.GetTransform().position.z)
+            );
+            if (dist < gridCellSize * 0.5f)
+                return false;
+        }
+
+        if (Physics.Raycast(_currentTransform.position, dir, out RaycastHit hit, gridCellSize * 0.9f, movementBlockMask, QueryTriggerInteraction.Ignore))
         {
             if (hit.collider.CompareTag("Wall") || hit.collider.CompareTag("Object") || hit.collider.CompareTag("Button"))
                 return false;

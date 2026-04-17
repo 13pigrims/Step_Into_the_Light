@@ -73,6 +73,10 @@ public class ChaptersPanel : BasePanel
     /// </summary>
     private void EnterChapterThree()
     {
+        Debug.Log("Enter Chapter Two Button Clicked!");
+        GameRoot.GetInstance().UIManager_Root.PopPanel(false);
+        ChapterThreePanel chapterThreePanel = new ChapterThreePanel();
+        GameRoot.GetInstance().UIManager_Root.PushPanel(chapterThreePanel);
         /// 在这里添加点击进入第三章按钮后的逻辑，例如，切换到第三章的游戏界面等
     }
 
